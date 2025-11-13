@@ -1,0 +1,306 @@
+<div class="container">
+  <div class="cadastro-wrapper">
+    <div class="card">
+      <div class="card-header">
+        <h2>{{ isEditMode ? 'Editar Paciente' : 'Cadastrar Novo Paciente' }}</h2>
+      </div>
+
+      <div class="card-body">
+        <!-- Mensagens de feedback -->
+        <div class="alert alert-success" *ngIf="successMessage">
+          {{ successMessage }}
+        </div>
+
+        <div class="alert alert-error" *ngIf="errorMessage">
+          {{ errorMessage }}
+        </div>
+
+        <form [formGroup]="form" (ngSubmit)="onSubmit()">
+          <!-- Dados Pessoais -->
+          <section class="form-section">
+            <h3>Dados Pessoais</h3>
+
+            <div class="form-row">
+              <div class="form-group col-12">
+                <label for="nome">Nome Completo *</label>
+                <input 
+                  type="text" 
+                  id="nome" 
+                  formControlName="nome"
+                  class="form-control"
+                  [class.invalid]="form.get('nome')?.touched && form.get('nome')?.invalid"
+                  placeholder="Digite o nome completo"
+                >
+                <span class="error-message" *ngIf="form.get('nome')?.touched && form.get('nome')?.invalid">
+                  {{ getErrorMessage('nome') }}
+                </span>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group col-md-6">
+                <label for="cpf">CPF *</label>
+                <input 
+                  type="text" 
+                  id="cpf" 
+                  formControlName="cpf"
+                  class="form-control"
+                  [class.invalid]="form.get('cpf')?.touched && form.get('cpf')?.invalid"
+                  placeholder="000.000.000-00"
+                  (input)="onCpfInput($event)"
+                  [value]="form.get('cpf')?.value | cpf"
+                >
+                <span class="error-message" *ngIf="form.get('cpf')?.touched && form.get('cpf')?.invalid">
+                  {{ getErrorMessage('cpf') }}
+                </span>
+              </div>
+
+              <div class="form-group col-md-6">
+                <label for="cns">CNS (Cartão Nacional de Saúde)</label>
+                <input 
+                  type="text" 
+                  id="cns" 
+                  formControlName="cns"
+                  class="form-control"
+                  [class.invalid]="form.get('cns')?.touched && form.get('cns')?.invalid"
+                  placeholder="000 0000 0000 0000"
+                  (input)="onCnsInput($event)"
+                  [value]="form.get('cns')?.value | cns"
+                >
+                <span class="error-message" *ngIf="form.get('cns')?.touched && form.get('cns')?.invalid">
+                  {{ getErrorMessage('cns') }}
+                </span>
+              </div>
+
+              <div class="form-group col-md-6">
+                <label for="sexo">Sexo *</label>
+                <select 
+                  id="sexo" 
+                  formControlName="sexo"
+                  class="form-control"
+                  [class.invalid]="form.get('sexo')?.touched && form.get('sexo')?.invalid"
+                >
+                  <option value="">Selecione</option>
+                  <option value="M">Masculino</option>
+                  <option value="F">Feminino</option>
+                </select>
+                <span class="error-message" *ngIf="form.get('sexo')?.touched && form.get('sexo')?.invalid">
+                  {{ getErrorMessage('sexo') }}
+                </span>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group col-md-6">
+                <label for="dataNascimento">Data de Nascimento *</label>
+                <input 
+                  type="date" 
+                  id="dataNascimento" 
+                  formControlName="dataNascimento"
+                  class="form-control"
+                  [class.invalid]="form.get('dataNascimento')?.touched && form.get('dataNascimento')?.invalid"
+                >
+                <span class="error-message" *ngIf="form.get('dataNascimento')?.touched && form.get('dataNascimento')?.invalid">
+                  {{ getErrorMessage('dataNascimento') }}
+                </span>
+              </div>
+
+              <div class="form-group col-md-6">
+                <label for="telefone">Telefone *</label>
+                <input 
+                  type="text" 
+                  id="telefone" 
+                  formControlName="telefone"
+                  class="form-control"
+                  [class.invalid]="form.get('telefone')?.touched && form.get('telefone')?.invalid"
+                  placeholder="(00) 00000-0000"
+                  (input)="onTelefoneInput($event)"
+                  [value]="form.get('telefone')?.value | telefone"
+                >
+                <span class="error-message" *ngIf="form.get('telefone')?.touched && form.get('telefone')?.invalid">
+                  {{ getErrorMessage('telefone') }}
+                </span>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group col-12">
+                <label for="email">Email</label>
+                <input 
+                  type="email" 
+                  id="email" 
+                  formControlName="email"
+                  class="form-control"
+                  [class.invalid]="form.get('email')?.touched && form.get('email')?.invalid"
+                  placeholder="email@exemplo.com"
+                >
+                <span class="error-message" *ngIf="form.get('email')?.touched && form.get('email')?.invalid">
+                  {{ getErrorMessage('email') }}
+                </span>
+              </div>
+            </div>
+          </section>
+
+          <!-- Endereço -->
+          <section class="form-section" formGroupName="endereco">
+            <h3>Endereço</h3>
+
+            <div class="form-row">
+              <div class="form-group col-md-3">
+                <label for="cep">CEP *</label>
+                <input 
+                  type="text" 
+                  id="cep" 
+                  formControlName="cep"
+                  class="form-control"
+                  [class.invalid]="form.get('endereco.cep')?.touched && form.get('endereco.cep')?.invalid"
+                  placeholder="00000-000"
+                  (input)="onCepInput($event)"
+                  maxlength="8"
+                >
+                <span class="error-message" *ngIf="form.get('endereco.cep')?.touched && form.get('endereco.cep')?.invalid">
+                  {{ getErrorMessage('endereco.cep') }}
+                </span>
+              </div>
+
+              <div class="form-group col-md-9">
+                <label for="logradouro">Logradouro *</label>
+                <input 
+                  type="text" 
+                  id="logradouro" 
+                  formControlName="logradouro"
+                  class="form-control"
+                  [class.invalid]="form.get('endereco.logradouro')?.touched && form.get('endereco.logradouro')?.invalid"
+                  placeholder="Rua, Avenida, etc."
+                >
+                <span class="error-message" *ngIf="form.get('endereco.logradouro')?.touched && form.get('endereco.logradouro')?.invalid">
+                  {{ getErrorMessage('endereco.logradouro') }}
+                </span>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group col-md-3">
+                <label for="numero">Número *</label>
+                <input 
+                  type="text" 
+                  id="numero" 
+                  formControlName="numero"
+                  class="form-control"
+                  [class.invalid]="form.get('endereco.numero')?.touched && form.get('endereco.numero')?.invalid"
+                >
+                <span class="error-message" *ngIf="form.get('endereco.numero')?.touched && form.get('endereco.numero')?.invalid">
+                  {{ getErrorMessage('endereco.numero') }}
+                </span>
+              </div>
+
+              <div class="form-group col-md-9">
+                <label for="complemento">Complemento</label>
+                <input 
+                  type="text" 
+                  id="complemento" 
+                  formControlName="complemento"
+                  class="form-control"
+                  placeholder="Apto, Bloco, etc."
+                >
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group col-md-5">
+                <label for="bairro">Bairro *</label>
+                <input 
+                  type="text" 
+                  id="bairro" 
+                  formControlName="bairro"
+                  class="form-control"
+                  [class.invalid]="form.get('endereco.bairro')?.touched && form.get('endereco.bairro')?.invalid"
+                >
+                <span class="error-message" *ngIf="form.get('endereco.bairro')?.touched && form.get('endereco.bairro')?.invalid">
+                  {{ getErrorMessage('endereco.bairro') }}
+                </span>
+              </div>
+
+              <div class="form-group col-md-5">
+                <label for="cidade">Cidade *</label>
+                <input 
+                  type="text" 
+                  id="cidade" 
+                  formControlName="cidade"
+                  class="form-control"
+                  [class.invalid]="form.get('endereco.cidade')?.touched && form.get('endereco.cidade')?.invalid"
+                >
+                <span class="error-message" *ngIf="form.get('endereco.cidade')?.touched && form.get('endereco.cidade')?.invalid">
+                  {{ getErrorMessage('endereco.cidade') }}
+                </span>
+              </div>
+
+              <div class="form-group col-md-2">
+                <label for="estado">UF *</label>
+                <select 
+                  id="estado" 
+                  formControlName="estado"
+                  class="form-control"
+                  [class.invalid]="form.get('endereco.estado')?.touched && form.get('endereco.estado')?.invalid"
+                >
+                  <option value="">Selecione</option>
+                  <option value="AC">AC</option>
+                  <option value="AL">AL</option>
+                  <option value="AP">AP</option>
+                  <option value="AM">AM</option>
+                  <option value="BA">BA</option>
+                  <option value="CE">CE</option>
+                  <option value="DF">DF</option>
+                  <option value="ES">ES</option>
+                  <option value="GO">GO</option>
+                  <option value="MA">MA</option>
+                  <option value="MT">MT</option>
+                  <option value="MS">MS</option>
+                  <option value="MG">MG</option>
+                  <option value="PA">PA</option>
+                  <option value="PB">PB</option>
+                  <option value="PR">PR</option>
+                  <option value="PE">PE</option>
+                  <option value="PI">PI</option>
+                  <option value="RJ">RJ</option>
+                  <option value="RN">RN</option>
+                  <option value="RS">RS</option>
+                  <option value="RO">RO</option>
+                  <option value="RR">RR</option>
+                  <option value="SC">SC</option>
+                  <option value="SP">SP</option>
+                  <option value="SE">SE</option>
+                  <option value="TO">TO</option>
+                </select>
+                <span class="error-message" *ngIf="form.get('endereco.estado')?.touched && form.get('endereco.estado')?.invalid">
+                  {{ getErrorMessage('endereco.estado') }}
+                </span>
+              </div>
+            </div>
+          </section>
+
+          <!-- Botões de ação -->
+          <div class="form-actions">
+            <button 
+              type="button" 
+              class="btn btn-secondary"
+              (click)="onCancel()"
+              [disabled]="isLoading"
+            >
+              Cancelar
+            </button>
+
+            <button 
+              type="submit" 
+              class="btn btn-primary"
+              [disabled]="isLoading || form.invalid"
+            >
+              <span *ngIf="!isLoading">{{ isEditMode ? 'Atualizar' : 'Cadastrar' }}</span>
+              <span *ngIf="isLoading" class="spinner"></span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

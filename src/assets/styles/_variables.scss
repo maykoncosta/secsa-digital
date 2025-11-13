@@ -1,0 +1,130 @@
+// Cores
+$primary-color: #2E7D32; // Verde escuro para área da saúde
+$primary-light: #4CAF50;
+$primary-dark: #1B5E20;
+
+$secondary-color: #1976D2; // Azul para destaques
+$secondary-light: #42A5F5;
+$secondary-dark: #0D47A1;
+
+$success-color: #4CAF50;
+$warning-color: #FF9800;
+$error-color: #F44336;
+$info-color: #2196F3;
+
+// Tons de cinza
+$gray-50: #FAFAFA;
+$gray-100: #F5F5F5;
+$gray-200: #EEEEEE;
+$gray-300: #E0E0E0;
+$gray-400: #BDBDBD;
+$gray-500: #9E9E9E;
+$gray-600: #757575;
+$gray-700: #616161;
+$gray-800: #424242;
+$gray-900: #212121;
+
+$white: #FFFFFF;
+$black: #000000;
+
+// Backgrounds
+$bg-light: $gray-50;
+$bg-medium: $gray-100;
+$bg-dark: $gray-800;
+
+// Texto
+$text-primary: rgba(0, 0, 0, 0.87);
+$text-secondary: rgba(0, 0, 0, 0.60);
+$text-disabled: rgba(0, 0, 0, 0.38);
+$text-light: $white;
+
+// Bordas
+$border-color: $gray-300;
+$border-light: $gray-200;
+$border-dark: $gray-400;
+
+// Espaçamentos
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
+$spacing-xl: 32px;
+$spacing-xxl: 48px;
+
+// Border radius
+$border-radius-sm: 4px;
+$border-radius-md: 8px;
+$border-radius-lg: 12px;
+$border-radius-xl: 16px;
+$border-radius-round: 50%;
+
+// Sombras
+$shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+$shadow-md: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+$shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
+$shadow-xl: 0 14px 28px rgba(0, 0, 0, 0.25), 0 10px 10px rgba(0, 0, 0, 0.22);
+
+// Tipografia
+$font-family-base: 'Roboto', 'Helvetica Neue', sans-serif;
+$font-family-mono: 'Roboto Mono', monospace;
+
+$font-size-xs: 12px;
+$font-size-sm: 14px;
+$font-size-base: 16px;
+$font-size-lg: 18px;
+$font-size-xl: 20px;
+$font-size-2xl: 24px;
+$font-size-3xl: 30px;
+$font-size-4xl: 36px;
+
+$font-weight-light: 300;
+$font-weight-normal: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+
+$line-height-tight: 1.2;
+$line-height-normal: 1.5;
+$line-height-relaxed: 1.8;
+
+// Breakpoints
+$breakpoint-xs: 0;
+$breakpoint-sm: 576px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 992px;
+$breakpoint-xl: 1200px;
+$breakpoint-xxl: 1400px;
+
+// Z-index
+$z-index-dropdown: 1000;
+$z-index-modal: 1050;
+$z-index-popover: 1060;
+$z-index-tooltip: 1070;
+$z-index-toast: 1080;
+
+// Transições
+$transition-fast: 150ms ease-in-out;
+$transition-base: 250ms ease-in-out;
+$transition-slow: 350ms ease-in-out;
+
+// Larguras de container
+$container-sm: 540px;
+$container-md: 720px;
+$container-lg: 960px;
+$container-xl: 1140px;
+$container-xxl: 1320px;
+
+// Altura do header
+$header-height: 64px;
+$sidebar-width: 260px;
+
+// Status colors para exames
+$status-pendente: $warning-color;
+$status-liberado: $success-color;
+$status-cancelado: $gray-500;
+
+// Valores de referência alterados
+$valor-alterado-bg: #FFEBEE;
+$valor-alterado-text: #C62828;
+$valor-normal-bg: #E8F5E9;
+$valor-normal-text: #2E7D32;

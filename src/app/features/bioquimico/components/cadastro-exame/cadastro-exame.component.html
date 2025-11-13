@@ -1,0 +1,215 @@
+<div class="container">
+  <div class="cadastro-wrapper">
+    <div class="card">
+      <div class="card-header">
+        <h2>Cadastrar Novo Exame</h2>
+      </div>
+
+      <div class="card-body">
+        <!-- Mensagens de feedback -->
+        <div class="alert alert-success" *ngIf="successMessage">
+          {{ successMessage }}
+        </div>
+
+        <div class="alert alert-error" *ngIf="errorMessage">
+          {{ errorMessage }}
+        </div>
+
+        <form [formGroup]="form" (ngSubmit)="onSubmit()">
+          <!-- Seleção de Paciente -->
+          <section class="form-section">
+            <h3>Paciente</h3>
+
+            <div *ngIf="!pacienteSelecionado" class="paciente-search">
+              <div class="form-group">
+                <label for="searchPaciente">Buscar Paciente</label>
+                <input 
+                  type="text" 
+                  id="searchPaciente"
+                  [(ngModel)]="searchPaciente"
+                  [ngModelOptions]="{standalone: true}"
+                  (input)="buscarPacientes()"
+                  class="form-control"
+                  placeholder="Digite o nome, CPF ou CNS do paciente..."
+                >
+              </div>
+
+              <!-- Lista de resultados -->
+              <div class="search-results" *ngIf="pacientesFiltrados.length > 0">
+                <div 
+                  *ngFor="let paciente of pacientesFiltrados"
+                  class="result-item"
+                  (click)="selecionarPaciente(paciente)"
+                >
+                  <div class="result-info">
+                    <strong>{{ paciente.nome }}</strong>
+                    <small>CPF: {{ paciente.cpf | cpf }}</small>
+                    <small *ngIf="paciente.cns">CNS: {{ paciente.cns | cns }}</small>
+                  </div>
+                </div>
+              </div>
+
+              <div class="loading-text" *ngIf="buscandoPaciente">
+                Buscando pacientes...
+              </div>
+            </div>
+
+            <!-- Paciente selecionado -->
+            <div *ngIf="pacienteSelecionado" class="paciente-selecionado">
+              <div class="paciente-card">
+                <div class="paciente-info">
+                  <h4>{{ pacienteSelecionado.nome }}</h4>
+                  <p><strong>CPF:</strong> {{ pacienteSelecionado.cpf | cpf }}</p>
+                  <p *ngIf="pacienteSelecionado.cns"><strong>CNS:</strong> {{ pacienteSelecionado.cns | cns }}</p>
+                  <p><strong>Nascimento:</strong> {{ pacienteSelecionado.dataNascimento | date:'dd/MM/yyyy' }}</p>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm" (click)="limparPaciente()">
+                  Trocar Paciente
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <!-- Tipo e Data do Exame -->
+          <section class="form-section">
+            <h3>Dados do Exame</h3>
+
+            <div class="form-row">
+              <div class="form-group col-md-6">
+                <label for="tipoExame">Tipo de Exame *</label>
+                <select 
+                  id="tipoExame" 
+                  formControlName="tipoExame"
+                  class="form-control"
+                  [class.invalid]="form.get('tipoExame')?.touched && form.get('tipoExame')?.invalid"
+                >
+                  <option value="">Selecione o tipo</option>
+                  <option value="hemograma">Hemograma</option>
+                  <option value="urina">Exame de Urina (EAS)</option>
+                  <option value="fezes">Exame de Fezes (Parasitológico)</option>
+                </select>
+                <span class="error-message" *ngIf="form.get('tipoExame')?.touched && form.get('tipoExame')?.invalid">
+                  Campo obrigatório
+                </span>
+              </div>
+
+              <div class="form-group col-md-6">
+                <label for="dataColeta">Data da Coleta *</label>
+                <input 
+                  type="date" 
+                  id="dataColeta" 
+                  formControlName="dataColeta"
+                  class="form-control"
+                  [class.invalid]="form.get('dataColeta')?.touched && form.get('dataColeta')?.invalid"
+                  [max]="'9999-12-31'"
+                >
+                <span class="error-message" *ngIf="form.get('dataColeta')?.touched && form.get('dataColeta')?.invalid">
+                  Campo obrigatório
+                </span>
+              </div>
+            </div>
+          </section>
+
+          <!-- Parâmetros do Exame -->
+          <section class="form-section" *ngIf="parametrosArray.length > 0">
+            <div class="parametros-header">
+              <h3>Resultados dos Parâmetros</h3>
+              <div class="alert-badge" *ngIf="totalParametrosAlterados > 0">
+                <span class="badge badge-warning">
+                  {{ totalParametrosAlterados }} valor(es) alterado(s)
+                </span>
+              </div>
+            </div>
+
+            <div class="parametros-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Parâmetro</th>
+                    <th>Valor</th>
+                    <th>Unidade</th>
+                    <th>Valor de Referência</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody formArrayName="parametros">
+                  <tr *ngFor="let parametro of parametrosArray.controls; let i = index" [formGroupName]="i">
+                    <td>
+                      <strong>{{ parametro.get('nome')?.value }}</strong>
+                    </td>
+                    <td>
+                      <input 
+                        type="text" 
+                        formControlName="valor"
+                        class="form-control form-control-sm"
+                        (blur)="onValorChange(i)"
+                        [class.valor-alterado]="parametro.get('alterado')?.value"
+                      >
+                    </td>
+                    <td>
+                      <small class="text-muted">{{ parametro.get('unidade')?.value }}</small>
+                    </td>
+                    <td>
+                      <small class="text-muted">{{ parametro.get('valorReferencia')?.value || '-' }}</small>
+                    </td>
+                    <td>
+                      <span 
+                        *ngIf="parametro.get('alterado')?.value" 
+                        class="badge badge-warning"
+                      >
+                        Alterado
+                      </span>
+                      <span 
+                        *ngIf="!parametro.get('alterado')?.value && parametro.get('valor')?.value" 
+                        class="badge badge-success"
+                      >
+                        Normal
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- Observações -->
+          <section class="form-section" *ngIf="parametrosArray.length > 0">
+            <h3>Observações</h3>
+
+            <div class="form-group">
+              <label for="observacoes">Observações Adicionais</label>
+              <textarea 
+                id="observacoes" 
+                formControlName="observacoes"
+                class="form-control"
+                rows="4"
+                placeholder="Adicione observações sobre o exame, se necessário..."
+              ></textarea>
+            </div>
+          </section>
+
+          <!-- Botões de ação -->
+          <div class="form-actions">
+            <button 
+              type="button" 
+              class="btn btn-secondary"
+              (click)="onCancel()"
+              [disabled]="isLoading"
+            >
+              Cancelar
+            </button>
+
+            <button 
+              type="submit" 
+              class="btn btn-primary"
+              [disabled]="isLoading || form.invalid || !pacienteSelecionado"
+            >
+              <span *ngIf="!isLoading">Cadastrar Exame</span>
+              <span *ngIf="isLoading" class="spinner"></span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
