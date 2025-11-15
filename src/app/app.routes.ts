@@ -3,12 +3,16 @@ import { BioquimicoLayoutComponent } from './features/bioquimico/layout/bioquimi
 import { ListaPacientesComponent } from './features/bioquimico/components/lista-pacientes/lista-pacientes.component';
 import { CadastroPacienteComponent } from './features/bioquimico/components/cadastro-paciente/cadastro-paciente.component';
 import { DetalhesPacienteComponent } from './features/bioquimico/components/detalhes-paciente/detalhes-paciente.component';
-import { CadastroExameComponent } from './features/bioquimico/components/cadastro-exame/cadastro-exame.component';
+// import { CadastroExameComponent } from './features/bioquimico/components/cadastro-exame/cadastro-exame.component';
+import { CadastroExameV2Component } from './features/bioquimico/components/cadastro-exame-v2/cadastro-exame-v2.component';
+import { PacienteLayoutComponent } from './features/paciente/layout/paciente-layout.component';
+import { MeusExamesComponent } from './features/paciente/components/meus-exames/meus-exames.component';
+import { VisualizarExameComponent } from './features/paciente/components/visualizar-exame/visualizar-exame.component';
 
 export const routes: Routes = [
   {
     path: '',
-    redirectTo: '/bioquimico/pacientes',
+    redirectTo: '/paciente/exames',
     pathMatch: 'full'
   },
   {
@@ -42,16 +46,40 @@ export const routes: Routes = [
       },
       {
         path: 'exames/novo',
-        component: CadastroExameComponent
+        component: CadastroExameV2Component
       },
+      // NOTA: Componente v1 desabilitado - usar v2 (dinâmico)
+      // {
+      //   path: 'exames/novo-v1',
+      //   component: CadastroExameComponent
+      // },
       {
         path: 'exames/editar/:id',
-        component: CadastroExameComponent
+        component: CadastroExameV2Component
+      }
+    ]
+  },
+  {
+    path: 'paciente',
+    component: PacienteLayoutComponent,
+    children: [
+      {
+        path: '',
+        redirectTo: 'exames',
+        pathMatch: 'full'
+      },
+      {
+        path: 'exames',
+        component: MeusExamesComponent
+      },
+      {
+        path: 'exames/:id',
+        component: VisualizarExameComponent
       }
     ]
   },
   {
     path: '**',
-    redirectTo: '/bioquimico/pacientes'
+    redirectTo: '/paciente/exames'
   }
 ];

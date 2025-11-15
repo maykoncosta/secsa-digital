@@ -30,23 +30,9 @@
           >
             <option value="todos">Todos</option>
             <option value="pendente">Pendente</option>
+            <option value="finalizado">Finalizado</option>
             <option value="liberado">Liberado</option>
             <option value="cancelado">Cancelado</option>
-          </select>
-        </div>
-
-        <div class="filter-group">
-          <label for="filtroTipo">Tipo:</label>
-          <select 
-            id="filtroTipo" 
-            [(ngModel)]="filtroTipo"
-            (change)="aplicarFiltros()"
-            class="form-control"
-          >
-            <option value="todos">Todos</option>
-            <option value="hemograma">Hemograma</option>
-            <option value="urina">Urina</option>
-            <option value="fezes">Fezes</option>
           </select>
         </div>
 
@@ -58,7 +44,7 @@
             [(ngModel)]="searchTerm"
             (input)="aplicarFiltros()"
             class="form-control"
-            placeholder="Código, paciente ou CPF..."
+            placeholder="Código, paciente, CPF ou tipo de exame..."
           >
         </div>
 
@@ -66,7 +52,7 @@
           <button 
             class="btn btn-secondary btn-sm"
             (click)="limparFiltros()"
-            *ngIf="searchTerm || filtroStatus !== 'todos' || filtroTipo !== 'todos'"
+            *ngIf="searchTerm || filtroStatus !== 'todos'"
           >
             Limpar
           </button>
@@ -96,10 +82,9 @@
             <tr>
               <th>Código</th>
               <th>Paciente</th>
-              <th>Tipo</th>
+              <th>Tipo de Exame</th>
               <th>Data Coleta</th>
               <th>Status</th>
-              <th>Alterados</th>
               <th class="text-center">Ações</th>
             </tr>
           </thead>
@@ -117,20 +102,12 @@
                   <small>{{ exame.pacienteCpf | cpf }}</small>
                 </div>
               </td>
-              <td>{{ getTipoExameLabel(exame.tipoExame) }}</td>
+              <td>{{ exame.exameNome }}</td>
               <td>{{ formatarData(exame.dataColeta) }}</td>
               <td>
                 <span class="badge" [ngClass]="getStatusClass(exame.status)">
                   {{ exame.status }}
                 </span>
-              </td>
-              <td>
-                <span class="alterados-badge" *ngIf="contarValoresAlterados(exame) > 0">
-                  <span class="badge badge-warning">
-                    {{ contarValoresAlterados(exame) }}
-                  </span>
-                </span>
-                <span *ngIf="contarValoresAlterados(exame) === 0" class="text-muted">-</span>
               </td>
               <td>
                 <div class="actions">
@@ -176,11 +153,11 @@
       <div class="empty-state" *ngIf="!isLoading && examesPaginados.length === 0">
         <div class="empty-icon">🔬</div>
         <h3>Nenhum exame encontrado</h3>
-        <p *ngIf="searchTerm || filtroStatus !== 'todos' || filtroTipo !== 'todos'">
+        <p *ngIf="searchTerm || filtroStatus !== 'todos'">
           Tente ajustar os filtros de busca ou 
           <button class="btn-link" (click)="limparFiltros()">limpar filtros</button>
         </p>
-        <p *ngIf="!searchTerm && filtroStatus === 'todos' && filtroTipo === 'todos'">
+        <p *ngIf="!searchTerm && filtroStatus === 'todos'">
           Comece cadastrando um novo exame
         </p>
         <button class="btn btn-primary mt-3" (click)="novoExame()">

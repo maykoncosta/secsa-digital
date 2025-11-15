@@ -114,3 +114,69 @@ export interface Configuracao {
   atualizadoEm: Date | Timestamp;
   atualizadoPor: string;
 }
+
+// ==================== NOVA ESTRUTURA DE EXAMES ====================
+
+export interface TipoExame {
+  uid: string;
+  nome: string;
+  codigo: string; // Ex: "HEM", "URI", "FEZ"
+  categoria: string; // Ex: "hematologia", "urinálise", "parasitologia"
+  ativo: boolean;
+  ordem: number; // Para ordenação na UI
+  dataCriacao: Date | Timestamp;
+  dataAtualizacao: Date | Timestamp;
+}
+
+export interface ParametroTipoExame {
+  uid: string;
+  nome: string;
+  unidade: string;
+  tipo: 'numerico' | 'texto' | 'selecao';
+  grupo?: string; // Ex: "eritrograma", "leucograma", "plaquetas"
+  ordem: number;
+  obrigatorio: boolean;
+  opcoes?: string[]; // Para tipo "selecao"
+}
+
+export interface ValorReferenciaParametro {
+  uid: string;
+  sexo: 'M' | 'F' | 'ambos';
+  idadeMin?: number; // Em anos
+  idadeMax?: number; // Em anos
+  valorMin?: number; // Para valores numéricos
+  valorMax?: number; // Para valores numéricos
+  valorEsperado?: string; // Para valores não-numéricos
+  ativo: boolean;
+}
+
+export interface ExameRealizado {
+  uid: string;
+  codigo: string; // Código único do exame realizado (ex: "HEM-2024-00001")
+  pacienteId: string;
+  pacienteNome: string; // Desnormalizado
+  pacienteCpf: string; // Desnormalizado
+  pacienteCns?: string; // Desnormalizado
+  pacienteDataNascimento: Date; // Desnormalizado
+  exameId: string; // Referência ao TipoExame
+  exameNome: string; // Desnormalizado
+  dataColeta: Date | Timestamp;
+  dataResultado?: Date | Timestamp;
+  dataLiberacao?: Date | Timestamp;
+  status: 'pendente' | 'finalizado' | 'liberado' | 'cancelado';
+  observacoes?: string;
+  profissionalId: string;
+  profissionalNome: string; // Desnormalizado
+  criadoEm: Date | Timestamp;
+  atualizadoEm: Date | Timestamp;
+}
+
+export interface ParametroExameRealizado {
+  uid: string;
+  nome: string; // Desnormalizado
+  valor: any;
+  unidade: string; // Desnormalizado
+  valorReferencia: string; // Desnormalizado (ex: "4.5 - 6.0")
+  interpretacao: 'normal' | 'alterado' | 'critico';
+  grupo?: string; // Desnormalizado
+}

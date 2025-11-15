@@ -1,0 +1,41 @@
+<div class="paciente-layout">
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <div class="logo">
+        <h1>SECSA Digital</h1>
+        <span class="subtitle">Portal do Paciente</span>
+      </div>
+      
+      <div class="user-info">
+        <div class="user-details">
+          <strong>{{ paciente.nome }}</strong>
+          <small>CPF: {{ paciente.cpf }}</small>
+        </div>
+        <button class="btn-logout" (click)="logout()" title="Sair">
+          🚪
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation -->
+  <nav class="navigation">
+    <a routerLink="/paciente/exames" routerLinkActive="active" class="nav-link">
+      📋 Meus Exames
+    </a>
+    <a routerLink="/paciente/perfil" routerLinkActive="active" class="nav-link">
+      👤 Meu Perfil
+    </a>
+  </nav>
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <router-outlet></router-outlet>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <p>&copy; 2024 SECSA - Secretaria de Saúde. Todos os direitos reservados.</p>
+  </footer>
+</div>

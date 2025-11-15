@@ -62,6 +62,7 @@
                   <p><strong>CPF:</strong> {{ pacienteSelecionado.cpf | cpf }}</p>
                   <p *ngIf="pacienteSelecionado.cns"><strong>CNS:</strong> {{ pacienteSelecionado.cns | cns }}</p>
                   <p><strong>Nascimento:</strong> {{ pacienteSelecionado.dataNascimento | date:'dd/MM/yyyy' }}</p>
+                  <p><strong>Sexo:</strong> {{ determinarSexo(pacienteSelecionado.sexo) }}</p>
                 </div>
                 <button type="button" class="btn btn-secondary btn-sm" (click)="limparPaciente()">
                   Trocar Paciente
@@ -76,19 +77,26 @@
 
             <div class="form-row">
               <div class="form-group col-md-6">
-                <label for="tipoExame">Tipo de Exame *</label>
-                <select 
-                  id="tipoExame" 
-                  formControlName="tipoExame"
-                  class="form-control"
-                  [class.invalid]="form.get('tipoExame')?.touched && form.get('tipoExame')?.invalid"
-                >
-                  <option value="">Selecione o tipo</option>
-                  <option value="hemograma">Hemograma</option>
-                  <option value="urina">Exame de Urina (EAS)</option>
-                  <option value="fezes">Exame de Fezes (Parasitológico)</option>
-                </select>
-                <span class="error-message" *ngIf="form.get('tipoExame')?.touched && form.get('tipoExame')?.invalid">
+                <label for="tipoExameId">Tipo de Exame *</label>
+                <div style="position: relative;">
+                  <select 
+                    id="tipoExameId" 
+                    formControlName="tipoExameId"
+                    (change)="onTipoExameChange()"
+                    class="form-control"
+                    [class.invalid]="form.get('tipoExameId')?.touched && form.get('tipoExameId')?.invalid"
+                  >
+                    <option value="">Selecione o tipo</option>
+                    <option *ngFor="let tipo of tiposExames" [value]="tipo.uid">
+                      {{ tipo.nome }}
+                    </option>
+                  </select>
+                  <div class="loading-overlay" *ngIf="carregandoParametros">
+                    <div class="spinner"></div>
+                    <span>Carregando parâmetros e valores de referência...</span>
+                  </div>
+                </div>
+                <span class="error-message" *ngIf="form.get('tipoExameId')?.touched && form.get('tipoExameId')?.invalid">
                   Campo obrigatório
                 </span>
               </div>
@@ -114,10 +122,11 @@
           <section class="form-section" *ngIf="parametrosArray.length > 0">
             <div class="parametros-header">
               <h3>Resultados dos Parâmetros</h3>
-              <div class="alert-badge" *ngIf="totalParametrosAlterados > 0">
-                <span class="badge badge-warning">
-                  {{ totalParametrosAlterados }} valor(es) alterado(s)
-                </span>
+              <div class="alert-info">
+                <small>
+                  <strong>{{ tipoExameSelecionado?.nome }}</strong> - 
+                  {{ parametrosArray.length }} parâmetro(s)
+                </small>
               </div>
             </div>
 
@@ -133,40 +142,57 @@
                   </tr>
                 </thead>
                 <tbody formArrayName="parametros">
-                  <tr *ngFor="let parametro of parametrosArray.controls; let i = index" [formGroupName]="i">
-                    <td>
-                      <strong>{{ parametro.get('nome')?.value }}</strong>
-                    </td>
-                    <td>
-                      <input 
-                        type="text" 
-                        formControlName="valor"
-                        class="form-control form-control-sm"
-                        (blur)="onValorChange(i)"
-                        [class.valor-alterado]="parametro.get('alterado')?.value"
-                      >
-                    </td>
-                    <td>
-                      <small class="text-muted">{{ parametro.get('unidade')?.value }}</small>
-                    </td>
-                    <td>
-                      <small class="text-muted">{{ parametro.get('valorReferencia')?.value || '-' }}</small>
-                    </td>
-                    <td>
-                      <span 
-                        *ngIf="parametro.get('alterado')?.value" 
-                        class="badge badge-warning"
-                      >
-                        Alterado
-                      </span>
-                      <span 
-                        *ngIf="!parametro.get('alterado')?.value && parametro.get('valor')?.value" 
-                        class="badge badge-success"
-                      >
-                        Normal
-                      </span>
-                    </td>
-                  </tr>
+                  <ng-container *ngFor="let parametro of parametrosArray.controls; let i = index">
+                    <!-- Cabeçalho do grupo -->
+                    <tr *ngIf="mostrarCabecalhoGrupo(i)" class="grupo-header">
+                      <td colspan="5">
+                        <strong class="grupo-titulo">{{ getNomeGrupo(i) }}</strong>
+                      </td>
+                    </tr>
+                    
+                    <!-- Linha do parâmetro -->
+                    <tr [formGroupName]="i">
+                      <td>
+                        <strong>{{ parametro.get('nome')?.value }}</strong>
+                      </td>
+                      <td>
+                        <input 
+                          [type]="parametro.get('tipo')?.value === 'numerico' ? 'number' : 'text'"
+                          formControlName="valor"
+                          class="form-control form-control-sm"
+                          (blur)="onValorChange(i)"
+                          [step]="parametro.get('tipo')?.value === 'numerico' ? '0.01' : ''"
+                          [placeholder]="parametro.get('tipo')?.value === 'texto' ? 'Digite o resultado' : '0.00'"
+                        >
+                      </td>
+                      <td>
+                        <small class="text-muted">{{ parametro.get('unidade')?.value || '-' }}</small>
+                      </td>
+                      <td>
+                        <small class="text-muted">{{ parametro.get('valorReferencia')?.value || '-' }}</small>
+                      </td>
+                      <td>
+                        <span 
+                          *ngIf="parametro.get('interpretacao')?.value === 'alterado'" 
+                          class="badge badge-warning"
+                        >
+                          Alterado
+                        </span>
+                        <span 
+                          *ngIf="parametro.get('interpretacao')?.value === 'critico'" 
+                          class="badge badge-danger"
+                        >
+                          Crítico
+                        </span>
+                        <span 
+                          *ngIf="parametro.get('interpretacao')?.value === 'normal' && parametro.get('valor')?.value" 
+                          class="badge badge-success"
+                        >
+                          Normal
+                        </span>
+                      </td>
+                    </tr>
+                  </ng-container>
                 </tbody>
               </table>
             </div>
@@ -193,7 +219,7 @@
             <button 
               type="button" 
               class="btn btn-secondary"
-              (click)="onCancel()"
+              (click)="cancelar()"
               [disabled]="isLoading"
             >
               Cancelar
@@ -202,10 +228,10 @@
             <button 
               type="submit" 
               class="btn btn-primary"
-              [disabled]="isLoading || form.invalid || !pacienteSelecionado"
+              [disabled]="isLoading || !pacienteSelecionado"
             >
               <span *ngIf="!isLoading">Cadastrar Exame</span>
-              <span *ngIf="isLoading" class="spinner"></span>
+              <span *ngIf="isLoading">Salvando...</span>
             </button>
           </div>
         </form>

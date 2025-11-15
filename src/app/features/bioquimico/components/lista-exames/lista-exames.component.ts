@@ -2,10 +2,8 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { Observable, combineLatest } from 'rxjs';
-import { ExameService } from '../../services/exame.service';
-import { PacienteService } from '../../services/paciente.service';
-import { Exame, StatusExame } from '../../../../core/models';
+import { ExameRealizadoService } from '../../services/exame-realizado.service';
+import { ExameRealizado } from '../../../../core/models';
 import { CpfPipe } from '../../../../shared/pipes/cpf.pipe';
 
 @Component({
@@ -17,18 +15,16 @@ import { CpfPipe } from '../../../../shared/pipes/cpf.pipe';
 })
 export class ListaExamesComponent implements OnInit {
   private router = inject(Router);
-  private exameService = inject(ExameService);
-  private pacienteService = inject(PacienteService);
+  private exameRealizadoService = inject(ExameRealizadoService);
 
-  exames: Exame[] = [];
-  examesFiltrados: Exame[] = [];
+  exames: ExameRealizado[] = [];
+  examesFiltrados: ExameRealizado[] = [];
   isLoading = false;
   errorMessage = '';
 
   // Filtros
   searchTerm = '';
-  filtroStatus: StatusExame | 'todos' = 'todos';
-  filtroTipo: 'hemograma' | 'urina' | 'fezes' | 'todos' = 'todos';
+  filtroStatus: 'pendente' | 'finalizado' | 'liberado' | 'cancelado' | 'todos' = 'todos';
   
   // Paginação
   paginaAtual = 1;
@@ -43,13 +39,13 @@ export class ListaExamesComponent implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
 
-    this.exameService.listarExames().subscribe({
-      next: (exames) => {
+    this.exameRealizadoService.listarTodos().subscribe({
+      next: (exames: ExameRealizado[]) => {
         this.exames = exames;
         this.aplicarFiltros();
         this.isLoading = false;
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Erro ao carregar exames:', error);
         this.errorMessage = 'Erro ao carregar exames. Por favor, tente novamente.';
         this.isLoading = false;
@@ -65,18 +61,14 @@ export class ListaExamesComponent implements OnInit {
       resultado = resultado.filter(e => e.status === this.filtroStatus);
     }
 
-    // Filtro por tipo
-    if (this.filtroTipo !== 'todos') {
-      resultado = resultado.filter(e => e.tipoExame === this.filtroTipo);
-    }
-
     // Filtro por busca
     if (this.searchTerm.trim()) {
       const termo = this.searchTerm.toLowerCase();
       resultado = resultado.filter(e => 
         e.codigo.toLowerCase().includes(termo) ||
         e.pacienteNome.toLowerCase().includes(termo) ||
-        e.pacienteCpf.replace(/\D/g, '').includes(termo.replace(/\D/g, ''))
+        (e.pacienteCpf && e.pacienteCpf.replace(/\D/g, '').includes(termo.replace(/\D/g, ''))) ||
+        e.exameNome.toLowerCase().includes(termo)
       );
     }
 
@@ -92,7 +84,7 @@ export class ListaExamesComponent implements OnInit {
     }
   }
 
-  get examesPaginados(): Exame[] {
+  get examesPaginados(): ExameRealizado[] {
     const inicio = (this.paginaAtual - 1) * this.itensPorPagina;
     const fim = inicio + this.itensPorPagina;
     return this.examesFiltrados.slice(inicio, fim);
@@ -125,23 +117,33 @@ export class ListaExamesComponent implements OnInit {
     this.router.navigate(['/bioquimico/exames/novo']);
   }
 
-  visualizarExame(exame: Exame): void {
-    this.router.navigate(['/bioquimico/exames/detalhes', exame.id]);
+  visualizarExame(exame: ExameRealizado): void {
+    this.router.navigate(['/bioquimico/exames/detalhes', exame.uid]);
   }
 
-  editarExame(exame: Exame): void {
+  editarExame(exame: ExameRealizado): void {
     if (exame.status === 'pendente') {
-      this.router.navigate(['/bioquimico/exames/editar', exame.id]);
+      this.router.navigate(['/bioquimico/exames/editar', exame.uid]);
     }
   }
 
-  liberarExame(exame: Exame): void {
-    if (exame.status !== 'pendente') return;
+  liberarExame(exame: ExameRealizado): void {
+    if (exame.status !== 'pendente' && exame.status !== 'finalizado') return;
     
-    this.router.navigate(['/bioquimico/exames/liberar', exame.id]);
+    if (confirm(`Tem certeza que deseja liberar o exame ${exame.codigo}?`)) {
+      this.isLoading = true;
+      
+      this.exameRealizadoService.atualizarStatus(exame.uid, 'liberado').then(() => {
+        this.carregarExames();
+      }).catch((error: any) => {
+        console.error('Erro ao liberar exame:', error);
+        this.errorMessage = 'Erro ao liberar exame. Por favor, tente novamente.';
+        this.isLoading = false;
+      });
+    }
   }
 
-  cancelarExame(exame: Exame): void {
+  cancelarExame(exame: ExameRealizado): void {
     if (exame.status === 'cancelado') return;
 
     const motivo = prompt(`Tem certeza que deseja cancelar o exame ${exame.codigo}?\n\nDigite o motivo do cancelamento:`);
@@ -150,51 +152,54 @@ export class ListaExamesComponent implements OnInit {
 
     this.isLoading = true;
 
-    // Usuário temporário - depois vem da autenticação
-    const usuarioId = 'bioquimico-temp-id';
-
-    this.exameService.cancelarExame(exame.id!, usuarioId, motivo).subscribe({
-      next: () => {
-        this.carregarExames();
-      },
-      error: (error) => {
-        console.error('Erro ao cancelar exame:', error);
-        this.errorMessage = 'Erro ao cancelar exame. Por favor, tente novamente.';
-        this.isLoading = false;
-      }
+    this.exameRealizadoService.atualizarStatus(exame.uid, 'cancelado').then(() => {
+      this.carregarExames();
+    }).catch((error: any) => {
+      console.error('Erro ao cancelar exame:', error);
+      this.errorMessage = 'Erro ao cancelar exame. Por favor, tente novamente.';
+      this.isLoading = false;
     });
   }
 
   limparFiltros(): void {
     this.searchTerm = '';
     this.filtroStatus = 'todos';
-    this.filtroTipo = 'todos';
     this.paginaAtual = 1;
     this.aplicarFiltros();
   }
 
-  getStatusClass(status: StatusExame): string {
+  getStatusClass(status: string): string {
     return `badge-${status}`;
   }
 
-  getTipoExameLabel(tipo: string): string {
-    const labels: { [key: string]: string } = {
-      'hemograma': 'Hemograma',
-      'urina': 'Urina (EAS)',
-      'fezes': 'Fezes'
-    };
-    return labels[tipo] || tipo;
+  formatarData(data: any): string {
+    if (!data) return '-';
+    
+    // Se for um Timestamp do Firestore
+    if (data.toDate && typeof data.toDate === 'function') {
+      return data.toDate().toLocaleDateString('pt-BR');
+    }
+    
+    // Se for uma string ou Date
+    const d = typeof data === 'string' ? new Date(data) : data;
+    return d.toLocaleDateString('pt-BR');
   }
 
-  contarValoresAlterados(exame: Exame): number {
-    return exame.parametros.filter(p => p.alterado).length;
-  }
-
-  formatarData(data: Date | string): string {
-    return this.exameService.formatarData(data);
-  }
-
-  diasDesdeColeta(data: Date | string): number {
-    return this.exameService.diasDesdeColeta(data);
+  diasDesdeColeta(data: any): number {
+    if (!data) return 0;
+    
+    let d: Date;
+    
+    // Se for um Timestamp do Firestore
+    if (data.toDate && typeof data.toDate === 'function') {
+      d = data.toDate();
+    } else {
+      // Se for uma string ou Date
+      d = typeof data === 'string' ? new Date(data) : data;
+    }
+    
+    const hoje = new Date();
+    const diffTime = Math.abs(hoje.getTime() - d.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   }
 }

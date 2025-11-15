@@ -1,0 +1,91 @@
+<div class="meus-exames-container">
+  <div class="page-header">
+    <h2>Meus Exames</h2>
+    <p class="subtitle">Visualize e baixe seus resultados de exames</p>
+  </div>
+
+  <!-- Mensagem de erro -->
+  <div class="alert alert-error" *ngIf="errorMessage">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Filtros -->
+  <div class="filters-card" *ngIf="!isLoading && exames.length > 0">
+    <label for="filtroStatus">Filtrar por status:</label>
+    <select 
+      id="filtroStatus" 
+      [(ngModel)]="filtroStatus"
+      (change)="aplicarFiltros()"
+      class="form-control"
+    >
+      <option value="todos">Todos os exames</option>
+      <option value="liberado">Liberados</option>
+      <option value="pendente">Em análise</option>
+    </select>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-container" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Carregando seus exames...</p>
+  </div>
+
+  <!-- Lista de exames -->
+  <div class="exames-grid" *ngIf="!isLoading && examesFiltrados.length > 0">
+    <div 
+      *ngFor="let exame of examesFiltrados" 
+      class="exame-card"
+      (click)="visualizarExame(exame)"
+    >
+      <div class="card-header">
+        <div class="exame-info">
+          <h3>{{ exame.exameNome }}</h3>
+          <span class="codigo">{{ exame.codigo }}</span>
+        </div>
+        <span class="status-badge" [ngClass]="getStatusClass(exame.status)">
+          <span class="icon">{{ getStatusIcon(exame.status) }}</span>
+          {{ exame.status }}
+        </span>
+      </div>
+
+      <div class="card-body">
+        <div class="info-row">
+          <span class="label">Data da Coleta:</span>
+          <span class="value">{{ formatarData(exame.dataColeta) }}</span>
+        </div>
+
+        <div class="info-row" *ngIf="exame.dataLiberacao">
+          <span class="label">Liberado em:</span>
+          <span class="value">{{ formatarData(exame.dataLiberacao) }}</span>
+        </div>
+
+        <div class="info-row">
+          <span class="label">Profissional:</span>
+          <span class="value">{{ exame.profissionalNome }}</span>
+        </div>
+      </div>
+
+      <div class="card-footer">
+        <button class="btn-view">
+          👁️ Visualizar Resultado
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mensagem quando não há exames -->
+  <div class="empty-state" *ngIf="!isLoading && examesFiltrados.length === 0 && exames.length === 0">
+    <div class="empty-icon">🔬</div>
+    <h3>Nenhum exame encontrado</h3>
+    <p>Você ainda não possui exames realizados no sistema.</p>
+  </div>
+
+  <div class="empty-state" *ngIf="!isLoading && examesFiltrados.length === 0 && exames.length > 0">
+    <div class="empty-icon">🔍</div>
+    <h3>Nenhum exame encontrado</h3>
+    <p>Não há exames com o status selecionado.</p>
+    <button class="btn-link" (click)="filtroStatus = 'todos'; aplicarFiltros()">
+      Ver todos os exames
+    </button>
+  </div>
+</div>

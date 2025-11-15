@@ -141,6 +141,48 @@ export class PacienteService {
   }
 
   /**
+   * Buscar pacientes por termo (nome, CPF ou CNS)
+   */
+  buscarPacientes(termo: string): Observable<Usuario[]> {
+    termo = termo.trim();
+    
+    // Remove formatação de CPF/CNS
+    const termoLimpo = termo.replace(/\D/g, '');
+    
+    const queryOptions: QueryOptions[] = [
+      { field: 'perfil', operator: '==', value: 'paciente' },
+      { field: 'ativo', operator: '==', value: true }
+    ];
+
+    return this.firestoreService.query<Usuario>(
+      this.COLLECTION,
+      queryOptions,
+      { field: 'nome', direction: 'asc' }
+    ).pipe(
+      map(pacientes => 
+        pacientes.filter(p => {
+          // Busca por nome
+          if (p.nome.toLowerCase().includes(termo.toLowerCase())) {
+            return true;
+          }
+          
+          // Busca por CPF
+          if (termoLimpo && p.cpf.replace(/\D/g, '').includes(termoLimpo)) {
+            return true;
+          }
+          
+          // Busca por CNS
+          if (termoLimpo && p.cns && p.cns.replace(/\D/g, '').includes(termoLimpo)) {
+            return true;
+          }
+          
+          return false;
+        })
+      )
+    );
+  }
+
+  /**
    * Desativar paciente
    */
   desativarPaciente(id: string): Observable<void> {
