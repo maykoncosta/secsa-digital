@@ -1,0 +1,219 @@
+<div class="relatorios-wrapper">
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h2>📊 Relatórios de Exames</h2>
+      <p class="text-muted">Análise e estatísticas dos exames realizados</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-secondary" (click)="imprimir()" [disabled]="isLoading || relatorio.total === 0">
+        🖨️ Imprimir
+      </button>
+      <button class="btn btn-primary" (click)="exportarCSV()" [disabled]="isLoading || relatorio.total === 0">
+        📥 Exportar CSV
+      </button>
+    </div>
+  </div>
+
+  <!-- Mensagem de erro -->
+  <div class="alert alert-error" *ngIf="errorMessage">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Filtros -->
+  <div class="card filters-card">
+    <h3>Filtros</h3>
+    
+    <div class="filters-grid">
+      <!-- Período -->
+      <div class="filter-group">
+        <label>Data Início</label>
+        <input 
+          type="date" 
+          [(ngModel)]="dataInicio"
+          class="form-control"
+          [max]="dataFim"
+        >
+      </div>
+
+      <div class="filter-group">
+        <label>Data Fim</label>
+        <input 
+          type="date" 
+          [(ngModel)]="dataFim"
+          class="form-control"
+          [min]="dataInicio"
+        >
+      </div>
+
+      <!-- Tipo de Exame -->
+      <div class="filter-group">
+        <label>Tipo de Exame</label>
+        <select [(ngModel)]="tipoExameSelecionado" class="form-control">
+          <option value="todos">Todos os tipos</option>
+          <option *ngFor="let tipo of tiposExames" [value]="tipo.uid">
+            {{ tipo.nome }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Status -->
+      <div class="filter-group">
+        <label>Status</label>
+        <select [(ngModel)]="statusSelecionado" class="form-control">
+          <option value="todos">Todos os status</option>
+          <option value="pendente">Pendente</option>
+          <option value="liberado">Liberado</option>
+          <option value="cancelado">Cancelado</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="filter-actions">
+      <div class="quick-filters">
+        <button class="btn-quick" (click)="definirPeriodo('mes-atual')">Mês Atual</button>
+        <button class="btn-quick" (click)="definirPeriodo('mes-anterior')">Mês Anterior</button>
+        <button class="btn-quick" (click)="definirPeriodo('ano-atual')">Ano Atual</button>
+      </div>
+      <button class="btn btn-primary" (click)="gerarRelatorio()" [disabled]="isLoading">
+        {{ isLoading ? 'Gerando...' : 'Gerar Relatório' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-container" *ngIf="isLoading">
+    <div class="spinner"></div>
+    <p>Gerando relatório...</p>
+  </div>
+
+  <!-- Cards de Estatísticas -->
+  <div class="stats-grid" *ngIf="!isLoading && relatorio.total > 0">
+    <div class="stat-card total">
+      <div class="stat-icon">📋</div>
+      <div class="stat-content">
+        <span class="stat-value">{{ relatorio.total }}</span>
+        <span class="stat-label">Total de Exames</span>
+      </div>
+    </div>
+
+    <div class="stat-card pendentes">
+      <div class="stat-icon">⏳</div>
+      <div class="stat-content">
+        <span class="stat-value">{{ relatorio.pendentes }}</span>
+        <span class="stat-label">Pendentes</span>
+        <span class="stat-percent">{{ percentualPendentes }}%</span>
+      </div>
+    </div>
+
+    <div class="stat-card liberados">
+      <div class="stat-icon">✅</div>
+      <div class="stat-content">
+        <span class="stat-value">{{ relatorio.liberados }}</span>
+        <span class="stat-label">Liberados</span>
+        <span class="stat-percent">{{ percentualLiberados }}%</span>
+      </div>
+    </div>
+
+    <div class="stat-card cancelados">
+      <div class="stat-icon">❌</div>
+      <div class="stat-content">
+        <span class="stat-value">{{ relatorio.cancelados }}</span>
+        <span class="stat-label">Cancelados</span>
+        <span class="stat-percent">{{ percentualCancelados }}%</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Gráficos e Análises -->
+  <div class="charts-grid" *ngIf="!isLoading && relatorio.total > 0">
+    
+    <!-- Exames por Tipo -->
+    <div class="card chart-card">
+      <h3>Top 5 - Exames Mais Realizados</h3>
+      <div class="chart-content">
+        <div class="bar-chart">
+          <div 
+            *ngFor="let item of tiposMaisRealizados" 
+            class="bar-item"
+          >
+            <div class="bar-label">{{ item.tipo }}</div>
+            <div class="bar-container">
+              <div 
+                class="bar-fill" 
+                [style.width.%]="(item.quantidade / relatorio.total) * 100"
+              ></div>
+              <span class="bar-value">{{ item.quantidade }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="empty-state" *ngIf="tiposMaisRealizados.length === 0">
+          <p>Nenhum dado disponível</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Distribuição por Status -->
+    <div class="card chart-card">
+      <h3>Distribuição por Status</h3>
+      <div class="chart-content">
+        <div class="status-distribution">
+          <div class="status-item liberados">
+            <div class="status-bar" [style.width.%]="percentualLiberados"></div>
+            <div class="status-info">
+              <span class="status-label">Liberados</span>
+              <span class="status-value">{{ relatorio.liberados }} ({{ percentualLiberados }}%)</span>
+            </div>
+          </div>
+          <div class="status-item pendentes">
+            <div class="status-bar" [style.width.%]="percentualPendentes"></div>
+            <div class="status-info">
+              <span class="status-label">Pendentes</span>
+              <span class="status-value">{{ relatorio.pendentes }} ({{ percentualPendentes }}%)</span>
+            </div>
+          </div>
+          <div class="status-item cancelados">
+            <div class="status-bar" [style.width.%]="percentualCancelados"></div>
+            <div class="status-info">
+              <span class="status-label">Cancelados</span>
+              <span class="status-value">{{ relatorio.cancelados }} ({{ percentualCancelados }}%)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Exames por Período -->
+    <div class="card chart-card full-width">
+      <h3>Exames por Período</h3>
+      <div class="chart-content">
+        <div class="line-chart" *ngIf="relatorio.porPeriodo.length > 0">
+          <div 
+            *ngFor="let item of relatorio.porPeriodo" 
+            class="period-item"
+          >
+            <div class="period-label">{{ item.data }}</div>
+            <div class="period-bar-container">
+              <div 
+                class="period-bar" 
+                [style.height.%]="(item.quantidade / relatorio.total) * 100"
+              >
+                <span class="period-value">{{ item.quantidade }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="empty-state" *ngIf="relatorio.porPeriodo.length === 0">
+          <p>Nenhum dado disponível</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <div class="card empty-state-card" *ngIf="!isLoading && relatorio.total === 0">
+    <div class="empty-icon">📊</div>
+    <h3>Nenhum exame encontrado</h3>
+    <p>Ajuste os filtros para visualizar os dados do relatório.</p>
+  </div>
+</div>

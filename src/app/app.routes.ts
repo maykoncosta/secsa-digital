@@ -6,6 +6,7 @@ import { DetalhesPacienteComponent } from './features/bioquimico/components/deta
 // import { CadastroExameComponent } from './features/bioquimico/components/cadastro-exame/cadastro-exame.component';
 import { CadastroExameV2Component } from './features/bioquimico/components/cadastro-exame-v2/cadastro-exame-v2.component';
 import { ValoresReferenciaComponent } from './features/bioquimico/components/valores-referencia/valores-referencia.component';
+import { RelatoriosComponent } from './features/bioquimico/components/relatorios/relatorios.component';
 import { PacienteLayoutComponent } from './features/paciente/layout/paciente-layout.component';
 import { MeusExamesComponent } from './features/paciente/components/meus-exames/meus-exames.component';
 import { VisualizarExameComponent } from './features/paciente/components/visualizar-exame/visualizar-exame.component';
@@ -61,6 +62,10 @@ export const routes: Routes = [
       {
         path: 'valores-referencia',
         component: ValoresReferenciaComponent
+      },
+      {
+        path: 'relatorios',
+        component: RelatoriosComponent
       }
     ]
   },

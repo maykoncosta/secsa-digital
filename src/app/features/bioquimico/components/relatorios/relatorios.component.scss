@@ -1,0 +1,634 @@
+@import '../../../../../assets/styles/_variables';
+
+.relatorios-wrapper {
+  padding: $spacing-lg;
+  max-width: 1600px;
+  margin: 0 auto;
+  min-height: calc(100vh - 64px);
+}
+
+// Header
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: $spacing-xl;
+
+  h2 {
+    margin: 0 0 $spacing-xs 0;
+    color: $text-primary;
+    font-size: $font-size-3xl;
+    font-weight: $font-weight-bold;
+  }
+
+  .text-muted {
+    margin: 0;
+    font-size: $font-size-base;
+    color: $text-secondary;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: $spacing-md;
+  }
+}
+
+// Card Base
+.card {
+  background: $white;
+  border-radius: $border-radius-lg;
+  box-shadow: $shadow-sm;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-lg;
+
+  h3 {
+    margin: 0 0 $spacing-lg 0;
+    color: $text-primary;
+    font-size: $font-size-xl;
+    font-weight: $font-weight-semibold;
+  }
+}
+
+// Filtros
+.filters-card {
+  h3 {
+    margin-bottom: $spacing-md;
+  }
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: $spacing-md;
+  margin-bottom: $spacing-lg;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+
+  label {
+    margin-bottom: $spacing-sm;
+    font-weight: $font-weight-semibold;
+    font-size: $font-size-sm;
+    color: $text-primary;
+  }
+
+  .form-control {
+    padding: $spacing-sm $spacing-md;
+    border: 1px solid $border-light;
+    border-radius: $border-radius-md;
+    font-size: $font-size-base;
+    transition: all $transition-fast;
+
+    &:focus {
+      outline: none;
+      border-color: $primary-color;
+      box-shadow: 0 0 0 2px rgba($primary-color, 0.1);
+    }
+  }
+}
+
+.filter-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: $spacing-md;
+  border-top: 1px solid $border-light;
+}
+
+.quick-filters {
+  display: flex;
+  gap: $spacing-sm;
+}
+
+.btn-quick {
+  padding: $spacing-xs $spacing-md;
+  background: $bg-light;
+  border: 1px solid $border-light;
+  border-radius: $border-radius-md;
+  font-size: $font-size-sm;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:hover {
+    background: $primary-color;
+    color: $white;
+    border-color: $primary-color;
+  }
+}
+
+// Cards de Estatísticas
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: $spacing-lg;
+  margin-bottom: $spacing-xl;
+}
+
+.stat-card {
+  background: $white;
+  border-radius: $border-radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-sm;
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  transition: all $transition-base;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: $shadow-md;
+  }
+
+  .stat-icon {
+    font-size: 3rem;
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: $border-radius-lg;
+    background: $bg-light;
+  }
+
+  .stat-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: $spacing-xs;
+  }
+
+  .stat-value {
+    font-size: $font-size-3xl;
+    font-weight: $font-weight-bold;
+    color: $text-primary;
+  }
+
+  .stat-label {
+    font-size: $font-size-sm;
+    color: $text-secondary;
+    font-weight: $font-weight-medium;
+  }
+
+  .stat-percent {
+    font-size: $font-size-base;
+    font-weight: $font-weight-semibold;
+    color: $primary-color;
+  }
+
+  &.total .stat-icon {
+    background: linear-gradient(135deg, lighten($primary-color, 45%), lighten($primary-color, 40%));
+  }
+
+  &.pendentes .stat-icon {
+    background: linear-gradient(135deg, lighten($warning-color, 35%), lighten($warning-color, 30%));
+  }
+
+  &.liberados .stat-icon {
+    background: linear-gradient(135deg, lighten($success-color, 45%), lighten($success-color, 40%));
+  }
+
+  &.cancelados .stat-icon {
+    background: linear-gradient(135deg, lighten($error-color, 40%), lighten($error-color, 35%));
+  }
+}
+
+// Gráficos
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $spacing-lg;
+  margin-bottom: $spacing-xl;
+}
+
+.chart-card {
+  &.full-width {
+    grid-column: 1 / -1;
+  }
+}
+
+.chart-content {
+  min-height: 300px;
+}
+
+// Gráfico de Barras Horizontal
+.bar-chart {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.bar-item {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.bar-label {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $text-primary;
+}
+
+.bar-container {
+  position: relative;
+  height: 30px;
+  background: $bg-light;
+  border-radius: $border-radius-md;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, $primary-color, darken($primary-color, 10%));
+  transition: width $transition-base;
+  display: flex;
+  align-items: center;
+  padding: 0 $spacing-sm;
+}
+
+.bar-value {
+  position: absolute;
+  right: $spacing-sm;
+  top: 50%;
+  transform: translateY(-50%);
+  font-weight: $font-weight-semibold;
+  font-size: $font-size-sm;
+  color: $text-primary;
+}
+
+// Distribuição por Status
+.status-distribution {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+}
+
+.status-item {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.status-bar {
+  height: 40px;
+  border-radius: $border-radius-md;
+  transition: width $transition-base;
+
+  .liberados & {
+    background: linear-gradient(90deg, $success-color, darken($success-color, 10%));
+  }
+
+  .pendentes & {
+    background: linear-gradient(90deg, $warning-color, darken($warning-color, 10%));
+  }
+
+  .cancelados & {
+    background: linear-gradient(90deg, $error-color, darken($error-color, 10%));
+  }
+}
+
+.status-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.status-label {
+  font-weight: $font-weight-semibold;
+  font-size: $font-size-base;
+  color: $text-primary;
+}
+
+.status-value {
+  font-size: $font-size-sm;
+  color: $text-secondary;
+}
+
+// Gráfico de Linha (Timeline)
+.line-chart {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: $spacing-md;
+  height: 250px;
+  padding: $spacing-md;
+  border-bottom: 2px solid $border-light;
+}
+
+.period-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.period-bar-container {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.period-bar {
+  width: 60%;
+  min-height: 20px;
+  background: linear-gradient(180deg, $primary-color, darken($primary-color, 10%));
+  border-radius: $border-radius-sm $border-radius-sm 0 0;
+  position: relative;
+  transition: all $transition-base;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: $spacing-xs;
+
+  &:hover {
+    background: linear-gradient(180deg, darken($primary-color, 5%), darken($primary-color, 15%));
+    transform: translateY(-4px);
+  }
+}
+
+.period-value {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-bold;
+  color: $white;
+}
+
+.period-label {
+  font-size: $font-size-xs;
+  color: $text-secondary;
+  text-align: center;
+  font-weight: $font-weight-medium;
+}
+
+// Tabela
+.table-card {
+  h3 {
+    margin-bottom: $spacing-md;
+  }
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+.exames-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  thead {
+    background: $bg-light;
+
+    th {
+      padding: $spacing-md;
+      text-align: left;
+      font-weight: $font-weight-semibold;
+      font-size: $font-size-sm;
+      color: $text-primary;
+      border-bottom: 2px solid $border-light;
+    }
+  }
+
+  tbody {
+    tr {
+      border-bottom: 1px solid $border-light;
+      transition: background $transition-fast;
+
+      &:hover {
+        background: lighten($primary-color, 50%);
+      }
+    }
+
+    td {
+      padding: $spacing-md;
+      font-size: $font-size-sm;
+      color: $text-primary;
+    }
+  }
+}
+
+// Badges
+.badge {
+  display: inline-block;
+  padding: $spacing-xs $spacing-md;
+  border-radius: $border-radius-md;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  text-transform: uppercase;
+
+  &.badge-pendente {
+    background: lighten($warning-color, 35%);
+    color: darken($warning-color, 20%);
+  }
+
+  &.badge-liberado {
+    background: lighten($success-color, 45%);
+    color: darken($success-color, 20%);
+  }
+
+  &.badge-cancelado {
+    background: lighten($error-color, 40%);
+    color: darken($error-color, 10%);
+  }
+}
+
+// Botões
+.btn {
+  padding: $spacing-sm $spacing-lg;
+  border: none;
+  border-radius: $border-radius-md;
+  font-size: $font-size-base;
+  font-weight: $font-weight-medium;
+  cursor: pointer;
+  transition: all $transition-fast;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &.btn-primary {
+    background: $primary-color;
+    color: $white;
+
+    &:hover:not(:disabled) {
+      background: darken($primary-color, 10%);
+      transform: translateY(-1px);
+      box-shadow: $shadow-sm;
+    }
+  }
+
+  &.btn-secondary {
+    background: $bg-light;
+    color: $text-primary;
+    border: 1px solid $border-light;
+
+    &:hover:not(:disabled) {
+      background: $bg-medium;
+    }
+  }
+}
+
+// Loading
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: $spacing-xxl;
+  gap: $spacing-lg;
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid $border-light;
+    border-top-color: $primary-color;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+// Empty State
+.empty-state {
+  text-align: center;
+  padding: $spacing-xl;
+  color: $text-secondary;
+  font-style: italic;
+
+  p {
+    margin: 0;
+  }
+}
+
+.empty-state-card {
+  text-align: center;
+  padding: $spacing-xxl;
+
+  .empty-icon {
+    font-size: 4rem;
+    margin-bottom: $spacing-lg;
+    opacity: 0.3;
+  }
+
+  h3 {
+    margin-bottom: $spacing-sm;
+    color: $text-primary;
+  }
+
+  p {
+    margin: 0;
+    color: $text-secondary;
+  }
+}
+
+// Alert
+.alert {
+  padding: $spacing-md $spacing-lg;
+  border-radius: $border-radius-md;
+  margin-bottom: $spacing-lg;
+
+  &.alert-error {
+    background: lighten($error-color, 40%);
+    color: darken($error-color, 10%);
+    border-left: 4px solid $error-color;
+  }
+}
+
+// Responsivo
+@media (max-width: 992px) {
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .relatorios-wrapper {
+    padding: $spacing-md;
+  }
+
+  .page-header {
+    flex-direction: column;
+    gap: $spacing-md;
+
+    .header-actions {
+      width: 100%;
+      
+      button {
+        flex: 1;
+      }
+    }
+  }
+
+  .filters-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-actions {
+    flex-direction: column;
+    gap: $spacing-md;
+
+    .quick-filters {
+      width: 100%;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      width: 100%;
+    }
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-card {
+    .stat-icon {
+      width: 60px;
+      height: 60px;
+      font-size: 2rem;
+    }
+
+    .stat-value {
+      font-size: $font-size-2xl;
+    }
+  }
+
+  .line-chart {
+    overflow-x: auto;
+    justify-content: flex-start;
+  }
+
+  .period-item {
+    min-width: 60px;
+  }
+}
+
+// Print styles
+@media print {
+  .page-header .header-actions,
+  .filter-actions,
+  .btn {
+    display: none !important;
+  }
+
+  .card {
+    box-shadow: none;
+    border: 1px solid $border-light;
+    page-break-inside: avoid;
+  }
+
+  .charts-grid {
+    page-break-inside: avoid;
+  }
+}
