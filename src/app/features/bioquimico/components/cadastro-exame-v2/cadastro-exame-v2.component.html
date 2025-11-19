@@ -150,11 +150,18 @@
           <section class="form-section" *ngIf="parametrosArray.length > 0">
             <div class="parametros-header">
               <h3>Resultados dos Parâmetros</h3>
-              <div class="alert-info">
-                <small>
-                  <strong>{{ tipoExameSelecionado?.nome }}</strong> - 
-                  {{ parametrosArray.length }} parâmetro(s)
-                </small>
+              <div class="header-info">
+                <div class="alert-info">
+                  <small>
+                    <strong>{{ tipoExameSelecionado?.nome }}</strong> - 
+                    {{ parametrosArray.length }} parâmetro(s)
+                  </small>
+                </div>
+                <div class="status-resumo" *ngIf="hasValoresAlterados()">
+                  <span class="resumo-item alterado" *ngIf="contarInterpretacoes().alterado > 0">
+                    ⚠️ {{ contarInterpretacoes().alterado }} Alterado(s)
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -179,7 +186,10 @@
                     </tr>
                     
                     <!-- Linha do parâmetro -->
-                    <tr [formGroupName]="i">
+                    <tr 
+                      [formGroupName]="i"
+                      [class.valor-alterado]="parametro.get('interpretacao')?.value === 'alterado'"
+                    >
                       <td>
                         <strong>{{ parametro.get('nome')?.value }}</strong>
                       </td>

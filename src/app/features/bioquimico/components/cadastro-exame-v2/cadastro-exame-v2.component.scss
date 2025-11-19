@@ -206,10 +206,41 @@
     margin: 0;
   }
 
+  .header-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: $spacing-sm;
+  }
+
   .alert-info {
     small {
       color: $text-secondary;
       font-size: $font-size-sm;
+    }
+  }
+
+  .status-resumo {
+    display: flex;
+    gap: $spacing-md;
+    align-items: center;
+
+    .resumo-item {
+      padding: $spacing-xs $spacing-md;
+      border-radius: $border-radius-md;
+      font-size: $font-size-sm;
+      font-weight: $font-weight-bold;
+      
+      &.critico {
+        background: lighten($error-color, 40%);
+        color: darken($error-color, 10%);
+        animation: pulse-danger 1.5s infinite;
+      }
+
+      &.alterado {
+        background: lighten($warning-color, 38%);
+        color: darken($warning-color, 15%);
+      }
     }
   }
 }
@@ -262,9 +293,16 @@
 
       tr {
         border-bottom: 1px solid $border-light;
+        transition: background $transition-fast;
 
         &:hover:not(.grupo-header) {
           background: $bg-light;
+        }
+
+        // Destaque para valores alterados
+        &.valor-alterado {
+          background: lighten($warning-color, 42%);
+          border-left: 3px solid $warning-color;
         }
       }
 
@@ -285,26 +323,34 @@
 // Badges
 .badge {
   display: inline-block;
-  padding: $spacing-xs $spacing-sm;
+  padding: $spacing-xs $spacing-md;
   font-size: $font-size-xs;
-  font-weight: $font-weight-medium;
-  border-radius: $border-radius-sm;
+  font-weight: $font-weight-bold;
+  border-radius: $border-radius-md;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  min-width: 70px;
+  text-align: center;
 
   &-success {
-    background: lighten($success-color, 45%);
-    color: darken($success-color, 15%);
+    background: $success-color;
+    color: $white;
   }
 
   &-warning {
-    background: lighten($warning-color, 35%);
-    color: darken($warning-color, 20%);
+    background: $warning-color;
+    color: $white;
+    animation: pulse-warning 2s infinite;
   }
+}
 
-  &-danger {
-    background: lighten($error-color, 35%);
-    color: darken($error-color, 15%);
+@keyframes pulse-warning {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
   }
 }
 

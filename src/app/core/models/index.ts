@@ -7,8 +7,9 @@ export type StatusExame = 'pendente' | 'liberado' | 'cancelado';
 export interface Usuario {
   uid: string;
   nome: string;
-  cpf: string;
-  cns?: string; // Cartão Nacional de Saúde
+  nomeNormalizado?: string; // Nome sem acentos e em lowercase para busca eficiente
+  cpf: string; // Armazenado sem formatação (apenas números)
+  cns?: string; // Cartão Nacional de Saúde - sem formatação (apenas números)
   sexo: 'M' | 'F'; // Masculino ou Feminino
   dataNascimento: Date;
   telefone: string;

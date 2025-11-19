@@ -256,7 +256,8 @@ export class CadastroExameV2Component implements OnInit {
             tipo: [parametro.tipo],
             grupo: [parametro.grupo],
             valorReferencia: [valorRefFormatado],
-            valorReferenciaObj: [valorRef]
+            valorReferenciaObj: [valorRef],
+            interpretacao: ['normal']
         });
 
         this.parametrosArray.push(parametroGroup);
@@ -282,35 +283,62 @@ export class CadastroExameV2Component implements OnInit {
         const tipo = parametroGroup.get('tipo')?.value;
         const valorRefObj = parametroGroup.get('valorReferenciaObj')?.value as ValorReferenciaParametro;
 
-        // Só valida se for numérico e tiver valor
-        if (!valor || tipo !== 'numerico' || !valorRefObj) {
+        // Se não tiver valor digitado, reseta para normal
+        if (!valor || valor === '') {
+            parametroGroup.patchValue({ interpretacao: 'normal' }, { emitEvent: false });
             return;
         }
 
-        // Validação para valores de referência não-numéricos (ex: "Negativo", "Ausente")
-        if (valorRefObj.valorEsperado) {
+        // Se não tiver referência, assume normal
+        if (!valorRefObj) {
+            parametroGroup.patchValue({ interpretacao: 'normal' }, { emitEvent: false });
             return;
         }
 
-        // Converte para número
-        const valorNum = typeof valor === 'string' ? parseFloat(valor) : valor;
+        let interpretacao: 'normal' | 'alterado' = 'normal';
 
-        // Verifica se é um número válido
-        if (isNaN(valorNum) || !isFinite(valorNum)) {
-            return;
-        }
+        // Validação para valores numéricos
+        if (tipo === 'numerico') {
+            const valorNum = typeof valor === 'string' ? parseFloat(valor) : valor;
 
-        // Valida contra referência
-        let interpretacao: 'normal' | 'alterado' | 'critico' = 'normal';
+            // Verifica se é um número válido
+            if (isNaN(valorNum) || !isFinite(valorNum)) {
+                return;
+            }
 
-        if (valorRefObj.valorMin !== undefined && valorNum < valorRefObj.valorMin) {
-            interpretacao = 'alterado';
-        } else if (valorRefObj.valorMax !== undefined && valorNum > valorRefObj.valorMax) {
-            interpretacao = 'alterado';
+            // Se tem valor esperado (texto), não valida numericamente
+            if (valorRefObj.valorEsperado) {
+                parametroGroup.patchValue({ interpretacao: 'normal' }, { emitEvent: false });
+                return;
+            }
+
+            // Verifica se está abaixo do mínimo
+            if (valorRefObj.valorMin !== undefined && valorNum < valorRefObj.valorMin) {
+                interpretacao = 'alterado';
+            } 
+            // Verifica se está acima do máximo
+            else if (valorRefObj.valorMax !== undefined && valorNum > valorRefObj.valorMax) {
+                interpretacao = 'alterado';
+            }
+        } 
+        // Validação para valores de texto (ex: "Negativo", "Ausente")
+        else if (tipo === 'texto' && valorRefObj.valorEsperado) {
+            const valorTexto = String(valor).toLowerCase().trim();
+            const valorEsperado = valorRefObj.valorEsperado.toLowerCase().trim();
+            
+            // Compara valores ignorando case e espaços
+            if (valorTexto !== valorEsperado) {
+                interpretacao = 'alterado';
+            }
         }
 
         // Atualiza interpretação
         parametroGroup.patchValue({ interpretacao }, { emitEvent: false });
+        
+        // Log para debug
+        if (interpretacao !== 'normal') {
+            console.log(`⚠️ ${parametroGroup.get('nome')?.value}: ${valor} - ${interpretacao.toUpperCase()}`);
+        }
     }
 
     /**
@@ -343,6 +371,52 @@ export class CadastroExameV2Component implements OnInit {
      */
     determinarSexo(sexo: string): string {
         return sexo === 'M' ? 'Masculino' : 'Feminino';
+    }
+
+    /**
+     * Retorna a classe CSS baseada na interpretação
+     */
+    getInterpretacaoClass(interpretacao: string): string {
+        return interpretacao === 'alterado' ? 'badge-warning' : 'badge-success';
+    }
+
+    /**
+     * Retorna o ícone baseado na interpretação
+     */
+    getInterpretacaoIcon(interpretacao: string): string {
+        return interpretacao === 'alterado' ? '⚠️' : '✓';
+    }
+
+    /**
+     * Verifica se há algum valor alterado
+     */
+    hasValoresAlterados(): boolean {
+        return this.parametrosArray.controls.some(control => {
+            const interpretacao = control.get('interpretacao')?.value;
+            return interpretacao === 'alterado';
+        });
+    }
+
+    /**
+     * Conta valores por interpretação
+     */
+    contarInterpretacoes(): { normal: number; alterado: number } {
+        const contagem = { normal: 0, alterado: 0 };
+        
+        this.parametrosArray.controls.forEach(control => {
+            const valor = control.get('valor')?.value;
+            const interpretacao = control.get('interpretacao')?.value;
+            
+            if (valor) {
+                if (interpretacao === 'alterado') {
+                    contagem.alterado++;
+                } else {
+                    contagem.normal++;
+                }
+            }
+        });
+        
+        return contagem;
     }
 
     /**
