@@ -67,6 +67,20 @@
       box-shadow: 0 0 0 3px rgba($primary-color, 0.1);
     }
   }
+
+  .search-input-group {
+    display: flex;
+    gap: $spacing-sm;
+
+    .form-control {
+      flex: 1;
+    }
+
+    .btn {
+      white-space: nowrap;
+      min-width: 120px;
+    }
+  }
 }
 
 .filter-actions {

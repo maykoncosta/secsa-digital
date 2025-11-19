@@ -1,0 +1,248 @@
+<div class="container">
+  <div class="valores-wrapper">
+    <!-- Header -->
+    <div class="page-header">
+      <div>
+        <h2>Valores de Referência</h2>
+        <p class="text-muted">Gerencie os valores de referência dos parâmetros de exames</p>
+      </div>
+    </div>
+
+    <!-- Mensagens -->
+    <div class="alert alert-success" *ngIf="successMessage">
+      {{ successMessage }}
+    </div>
+
+    <div class="alert alert-error" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </div>
+
+    <!-- Seleção de Tipo de Exame -->
+    <div class="card">
+      <div class="card-body">
+        <div class="form-group">
+          <label for="tipoExame">Selecione o Tipo de Exame</label>
+          <select 
+            id="tipoExame"
+            [(ngModel)]="tipoExameSelecionado"
+            (change)="onTipoExameChange()"
+            class="form-control"
+          >
+            <option [ngValue]="null">Selecione um tipo de exame</option>
+            <option *ngFor="let tipo of tiposExames" [ngValue]="tipo">
+              {{ tipo.nome }}
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-container" *ngIf="isLoading && !parametroEmEdicao">
+      <div class="spinner"></div>
+      <p>Carregando dados...</p>
+    </div>
+
+    <!-- Tabela de Parâmetros -->
+    <div class="card table-card" *ngIf="!isLoading && tipoExameSelecionado && parametrosComReferencias.length > 0">
+      <table class="parametros-table">
+        <thead>
+          <tr>
+            <th style="width: 40px;"></th>
+            <th>Parâmetro</th>
+            <th>Grupo</th>
+            <th>Unidade</th>
+            <th>Tipo</th>
+            <th class="text-center">Valores Cadastrados</th>
+            <th class="text-center">Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <ng-container *ngFor="let item of parametrosComReferencias; let i = index">
+            <!-- Linha do Parâmetro -->
+            <tr class="parametro-row" [class.expanded]="parametroExpandido === item.parametro.uid">
+              <td class="expand-cell">
+                <button 
+                  class="btn-expand"
+                  (click)="toggleParametro(item.parametro.uid)"
+                  [class.expanded]="parametroExpandido === item.parametro.uid"
+                >
+                  <span class="arrow">▶</span>
+                </button>
+              </td>
+              <td class="parametro-nome">
+                <strong>{{ item.parametro.nome }}</strong>
+              </td>
+              <td>
+                <span class="badge badge-secondary" *ngIf="item.parametro.grupo">{{ item.parametro.grupo }}</span>
+                <span *ngIf="!item.parametro.grupo">-</span>
+              </td>
+              <td>
+                <span class="badge badge-info">{{ item.parametro.unidade || '-' }}</span>
+              </td>
+              <td>
+                <span class="tipo-badge">{{ item.parametro.tipo }}</span>
+              </td>
+              <td class="text-center">
+                <span class="count-badge">{{ item.referencias.length }}</span>
+              </td>
+              <td class="text-center">
+                <button 
+                  class="btn btn-sm btn-primary"
+                  (click)="abrirFormCriar(item.parametro)"
+                  [disabled]="parametroEmEdicao !== null"
+                >
+                  + Adicionar
+                </button>
+              </td>
+            </tr>
+
+            <!-- Linha Expandida com Valores de Referência -->
+            <tr class="expanded-row" *ngIf="parametroExpandido === item.parametro.uid">
+              <td colspan="7" class="expanded-content">
+                
+                <!-- Form de Edição -->
+                <div class="form-edicao" *ngIf="parametroEmEdicao?.uid === item.parametro.uid">
+                  <h4>{{ modoEdicao === 'criar' ? '➕ Nova' : '✏️ Editar' }} Referência</h4>
+                  
+                  <form [formGroup]="formReferencia" (ngSubmit)="salvarReferencia()">
+                    <div class="form-row">
+                      <div class="form-group">
+                        <label>Sexo *</label>
+                        <select formControlName="sexo" class="form-control">
+                          <option value="ambos">Ambos</option>
+                          <option value="M">Masculino</option>
+                          <option value="F">Feminino</option>
+                        </select>
+                      </div>
+
+                      <div class="form-group">
+                        <label>Idade Mínima (anos)</label>
+                        <input 
+                          type="number" 
+                          formControlName="idadeMin" 
+                          class="form-control"
+                          placeholder="Ex: 0"
+                          min="0"
+                        >
+                      </div>
+
+                      <div class="form-group">
+                        <label>Idade Máxima (anos)</label>
+                        <input 
+                          type="number" 
+                          formControlName="idadeMax" 
+                          class="form-control"
+                          placeholder="Ex: 18"
+                          min="0"
+                        >
+                      </div>
+
+                      <div class="form-group" *ngIf="item.parametro.tipo === 'numerico'">
+                        <label>Valor Mínimo</label>
+                        <input 
+                          type="number" 
+                          formControlName="valorMin" 
+                          class="form-control"
+                          placeholder="Ex: 13.5"
+                          step="0.01"
+                        >
+                      </div>
+
+                      <div class="form-group" *ngIf="item.parametro.tipo === 'numerico'">
+                        <label>Valor Máximo</label>
+                        <input 
+                          type="number" 
+                          formControlName="valorMax" 
+                          class="form-control"
+                          placeholder="Ex: 17.5"
+                          step="0.01"
+                        >
+                      </div>
+
+                      <div class="form-group full-width" *ngIf="item.parametro.tipo !== 'numerico'">
+                        <label>Valor Esperado</label>
+                        <input 
+                          type="text" 
+                          formControlName="valorEsperado" 
+                          class="form-control"
+                          placeholder="Ex: Negativo, Ausente"
+                        >
+                      </div>
+                    </div>
+
+                    <div class="form-actions">
+                      <button 
+                        type="button" 
+                        class="btn btn-secondary"
+                        (click)="cancelarEdicao()"
+                        [disabled]="isLoading"
+                      >
+                        Cancelar
+                      </button>
+                      <button 
+                        type="submit" 
+                        class="btn btn-primary"
+                        [disabled]="!formReferencia.valid || isLoading"
+                      >
+                        {{ modoEdicao === 'criar' ? 'Criar' : 'Salvar' }}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+
+                <!-- Lista de Valores de Referência -->
+                <div class="referencias-expandidas" *ngIf="item.referencias.length > 0 && parametroEmEdicao?.uid !== item.parametro.uid">
+                  <h4>Valores de Referência Cadastrados</h4>
+                  <div class="referencias-grid">
+                    <div 
+                      *ngFor="let ref of item.referencias" 
+                      class="ref-card"
+                      [class.inativo]="!ref.ativo"
+                    >
+                      <div class="ref-info">
+                        <span class="ref-label">{{ formatarSexo(ref.sexo) }}</span>
+                        <span class="ref-separator">•</span>
+                        <span class="ref-label">{{ formatarIdade(ref) }}</span>
+                      </div>
+                      <div class="ref-valor">
+                        <strong>{{ formatarReferencia(ref) }}</strong>
+                        <span class="ref-unidade">{{ item.parametro.unidade }}</span>
+                      </div>
+                      <button 
+                        class="btn-edit-small"
+                        (click)="abrirFormEditar(item.parametro, ref)"
+                        [disabled]="parametroEmEdicao !== null || !ref.ativo"
+                        title="Editar"
+                      >
+                        ✏️
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="empty-message" *ngIf="item.referencias.length === 0 && parametroEmEdicao?.uid !== item.parametro.uid">
+                  <p>Nenhum valor de referência cadastrado para este parâmetro.</p>
+                </div>
+
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Estado vazio -->
+    <div class="empty-state card" *ngIf="!isLoading && tipoExameSelecionado && parametrosComReferencias.length === 0">
+      <div class="empty-icon">📊</div>
+      <h3>Nenhum parâmetro encontrado</h3>
+      <p>Este tipo de exame não possui parâmetros cadastrados.</p>
+    </div>
+
+    <div class="empty-state card" *ngIf="!isLoading && !tipoExameSelecionado">
+      <div class="empty-icon">🔬</div>
+      <h3>Selecione um Tipo de Exame</h3>
+      <p>Escolha um tipo de exame acima para gerenciar seus valores de referência.</p>
+    </div>
+  </div>
+</div>

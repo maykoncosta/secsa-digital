@@ -38,13 +38,22 @@ export class PacienteService {
    * Buscar paciente por CPF
    */
   buscarPorCpf(cpf: string): Observable<Usuario | null> {
+    // Remove formatação do CPF
+    const cpfLimpo = cpf.replace(/\D/g, '');
+    
     const queryOptions: QueryOptions[] = [
-      { field: 'cpf', operator: '==', value: cpf },
       { field: 'perfil', operator: '==', value: 'paciente' }
     ];
 
-    return this.firestoreService.query<Usuario>(this.COLLECTION, queryOptions, undefined, 1).pipe(
-      map(pacientes => pacientes.length > 0 ? pacientes[0] : null)
+    // Como não podemos buscar por substring no Firestore,
+    // buscamos todos os pacientes e filtramos no cliente
+    return this.firestoreService.query<Usuario>(this.COLLECTION, queryOptions).pipe(
+      map(pacientes => {
+        const encontrado = pacientes.find(p => 
+          p.cpf.replace(/\D/g, '') === cpfLimpo
+        );
+        return encontrado || null;
+      })
     );
   }
 
@@ -52,13 +61,22 @@ export class PacienteService {
    * Buscar paciente por CNS
    */
   buscarPorCns(cns: string): Observable<Usuario | null> {
+    // Remove formatação do CNS
+    const cnsLimpo = cns.replace(/\D/g, '');
+    
     const queryOptions: QueryOptions[] = [
-      { field: 'cns', operator: '==', value: cns },
       { field: 'perfil', operator: '==', value: 'paciente' }
     ];
 
-    return this.firestoreService.query<Usuario>(this.COLLECTION, queryOptions, undefined, 1).pipe(
-      map(pacientes => pacientes.length > 0 ? pacientes[0] : null)
+    // Como não podemos buscar por substring no Firestore,
+    // buscamos todos os pacientes e filtramos no cliente
+    return this.firestoreService.query<Usuario>(this.COLLECTION, queryOptions).pipe(
+      map(pacientes => {
+        const encontrado = pacientes.find(p => 
+          p.cns && p.cns.replace(/\D/g, '') === cnsLimpo
+        );
+        return encontrado || null;
+      })
     );
   }
 

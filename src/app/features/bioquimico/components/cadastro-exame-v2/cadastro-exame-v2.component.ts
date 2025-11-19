@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormArray, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Observable, of } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap, catchError } from 'rxjs';
+import { debounceTime, distinctUntilChanged, switchMap, catchError, map } from 'rxjs';
 import { differenceInYears } from 'date-fns';
 import { PacienteService } from '../../services/paciente.service';
 import { TipoExameService } from '../../services/tipo-exame.service';
@@ -39,6 +39,7 @@ export class CadastroExameV2Component implements OnInit {
 
     // Busca de paciente
     searchPaciente = '';
+    criterioBusca: 'nome' | 'cpf' | 'cns' = 'nome';
     pacientesFiltrados: Usuario[] = [];
     pacienteSelecionado: Usuario | null = null;
     buscandoPaciente = false;
@@ -89,23 +90,52 @@ export class CadastroExameV2Component implements OnInit {
     }
 
     /**
-     * Busca pacientes pelo termo de busca
+     * Busca pacientes pelo termo de busca e critério selecionado
      */
     buscarPacientes(): void {
-        if (this.searchPaciente.length < 3) {
+        const termo = this.searchPaciente.trim();
+        
+        if (!termo || termo.length < 3) {
+            this.errorMessage = 'Digite pelo menos 3 caracteres para buscar.';
             this.pacientesFiltrados = [];
             return;
         }
 
         this.buscandoPaciente = true;
+        this.errorMessage = '';
 
-        this.pacienteService.buscarPacientes(this.searchPaciente).subscribe({
-            next: (pacientes) => {
+        // Busca baseada no critério selecionado
+        let observable$: Observable<Usuario[]>;
+        
+        switch (this.criterioBusca) {
+            case 'cpf':
+                observable$ = this.pacienteService.buscarPorCpf(termo).pipe(
+                    map(paciente => paciente ? [paciente] : [])
+                );
+                break;
+            case 'cns':
+                observable$ = this.pacienteService.buscarPorCns(termo).pipe(
+                    map(paciente => paciente ? [paciente] : [])
+                );
+                break;
+            case 'nome':
+            default:
+                observable$ = this.pacienteService.buscarPorNome(termo);
+                break;
+        }
+
+        observable$.subscribe({
+            next: (pacientes: Usuario[]) => {
                 this.pacientesFiltrados = pacientes;
                 this.buscandoPaciente = false;
+                
+                if (pacientes.length === 0) {
+                    this.errorMessage = 'Nenhum paciente encontrado.';
+                }
             },
-            error: (error) => {
+            error: (error: any) => {
                 console.error('Erro ao buscar pacientes:', error);
+                this.errorMessage = 'Erro ao buscar pacientes. Tente novamente.';
                 this.buscandoPaciente = false;
             }
         });
@@ -130,6 +160,7 @@ export class CadastroExameV2Component implements OnInit {
     limparPaciente(): void {
         this.pacienteSelecionado = null;
         this.searchPaciente = '';
+        this.pacientesFiltrados = [];
         this.form.patchValue({ pacienteId: '', tipoExameId: '' });
         this.form.get('tipoExameId')?.disable();
         this.limparParametros();

@@ -25,10 +25,8 @@
           <select 
             id="filtroTipo" 
             [(ngModel)]="filtroTipo"
-            (change)="aplicarFiltros()"
             class="form-control"
           >
-            <option value="todos">Todos os campos</option>
             <option value="nome">Nome</option>
             <option value="cpf">CPF</option>
             <option value="cns">CNS</option>
@@ -36,22 +34,38 @@
         </div>
 
         <div class="filter-group flex-grow">
-          <label for="searchTerm">Pesquisar:</label>
-          <input 
-            type="text" 
-            id="searchTerm"
-            [(ngModel)]="searchTerm"
-            (input)="onSearchChange(searchTerm)"
-            class="form-control"
-            placeholder="Digite para buscar..."
-          >
+          <label for="searchTerm">
+            <span *ngIf="filtroTipo === 'nome'">Nome do Paciente</span>
+            <span *ngIf="filtroTipo === 'cpf'">CPF</span>
+            <span *ngIf="filtroTipo === 'cns'">CNS</span>
+          </label>
+          <div class="search-input-group">
+            <input 
+              type="text" 
+              id="searchTerm"
+              [(ngModel)]="searchTerm"
+              class="form-control"
+              [placeholder]="filtroTipo === 'nome' ? 'Digite o nome do paciente...' : 
+                             filtroTipo === 'cpf' ? 'Digite o CPF...' : 
+                             'Digite o CNS...'"
+            >
+            <button 
+              type="button" 
+              class="btn btn-primary"
+              (click)="buscarPacientes()"
+              [disabled]="buscandoPacientes || !searchTerm || searchTerm.length < 3"
+            >
+              <span *ngIf="!buscandoPacientes">Pesquisar</span>
+              <span *ngIf="buscandoPacientes">Buscando...</span>
+            </button>
+          </div>
         </div>
 
         <div class="filter-actions">
           <button 
             class="btn btn-secondary btn-sm"
             (click)="limparFiltros()"
-            *ngIf="searchTerm || filtroTipo !== 'todos'"
+            *ngIf="searchTerm"
           >
             Limpar
           </button>
@@ -141,12 +155,12 @@
       <div class="empty-state" *ngIf="!isLoading && pacientesPaginados.length === 0">
         <div class="empty-icon">📋</div>
         <h3>Nenhum paciente encontrado</h3>
-        <p *ngIf="searchTerm || filtroTipo !== 'todos'">
+        <p *ngIf="searchTerm">
           Tente ajustar os filtros de busca ou 
           <button class="btn-link" (click)="limparFiltros()">limpar filtros</button>
         </p>
-        <p *ngIf="!searchTerm && filtroTipo === 'todos'">
-          Comece cadastrando um novo paciente
+        <p *ngIf="!searchTerm">
+          Comece cadastrando um novo paciente ou faça uma busca
         </p>
         <button class="btn btn-primary mt-3" (click)="novoPaciente()">
           Cadastrar Primeiro Paciente

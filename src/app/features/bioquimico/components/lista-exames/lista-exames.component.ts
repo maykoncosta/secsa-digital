@@ -24,7 +24,9 @@ export class ListaExamesComponent implements OnInit {
 
   // Filtros
   searchTerm = '';
+  criterioBusca: 'todos' | 'codigo' | 'paciente' | 'cpf' | 'exame' = 'todos';
   filtroStatus: 'pendente' | 'finalizado' | 'liberado' | 'cancelado' | 'todos' = 'todos';
+  buscandoExames = false;
   
   // Paginação
   paginaAtual = 1;
@@ -53,6 +55,20 @@ export class ListaExamesComponent implements OnInit {
     });
   }
 
+  buscarExames(): void {
+    const termo = this.searchTerm.trim();
+    
+    if (!termo || termo.length < 3) {
+      this.errorMessage = 'Digite pelo menos 3 caracteres para buscar.';
+      return;
+    }
+
+    this.buscandoExames = true;
+    this.errorMessage = '';
+    this.aplicarFiltros();
+    this.buscandoExames = false;
+  }
+
   aplicarFiltros(): void {
     let resultado = [...this.exames];
 
@@ -64,12 +80,29 @@ export class ListaExamesComponent implements OnInit {
     // Filtro por busca
     if (this.searchTerm.trim()) {
       const termo = this.searchTerm.toLowerCase();
-      resultado = resultado.filter(e => 
-        e.codigo.toLowerCase().includes(termo) ||
-        e.pacienteNome.toLowerCase().includes(termo) ||
-        (e.pacienteCpf && e.pacienteCpf.replace(/\D/g, '').includes(termo.replace(/\D/g, ''))) ||
-        e.exameNome.toLowerCase().includes(termo)
-      );
+      
+      resultado = resultado.filter(e => {
+        switch (this.criterioBusca) {
+          case 'codigo':
+            return e.codigo.toLowerCase().includes(termo);
+          
+          case 'paciente':
+            return e.pacienteNome.toLowerCase().includes(termo);
+          
+          case 'cpf':
+            return e.pacienteCpf && e.pacienteCpf.replace(/\D/g, '').includes(termo.replace(/\D/g, ''));
+          
+          case 'exame':
+            return e.exameNome.toLowerCase().includes(termo);
+          
+          case 'todos':
+          default:
+            return e.codigo.toLowerCase().includes(termo) ||
+                   e.pacienteNome.toLowerCase().includes(termo) ||
+                   (e.pacienteCpf && e.pacienteCpf.replace(/\D/g, '').includes(termo.replace(/\D/g, ''))) ||
+                   e.exameNome.toLowerCase().includes(termo);
+        }
+      });
     }
 
     this.examesFiltrados = resultado;
@@ -163,9 +196,11 @@ export class ListaExamesComponent implements OnInit {
 
   limparFiltros(): void {
     this.searchTerm = '';
+    this.criterioBusca = 'todos';
     this.filtroStatus = 'todos';
     this.paginaAtual = 1;
-    this.aplicarFiltros();
+    this.errorMessage = '';
+    this.carregarExames();
   }
 
   getStatusClass(status: string): string {

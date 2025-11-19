@@ -36,23 +36,58 @@
           </select>
         </div>
 
-        <div class="filter-group flex-grow">
-          <label for="searchTerm">Pesquisar:</label>
-          <input 
-            type="text" 
-            id="searchTerm"
-            [(ngModel)]="searchTerm"
-            (input)="aplicarFiltros()"
+        <div class="filter-group">
+          <label for="criterioBusca">Buscar por:</label>
+          <select 
+            id="criterioBusca" 
+            [(ngModel)]="criterioBusca"
             class="form-control"
-            placeholder="Código, paciente, CPF ou tipo de exame..."
           >
+            <option value="todos">Todos os campos</option>
+            <option value="codigo">Código</option>
+            <option value="paciente">Paciente</option>
+            <option value="cpf">CPF</option>
+            <option value="exame">Tipo de Exame</option>
+          </select>
+        </div>
+
+        <div class="filter-group flex-grow">
+          <label for="searchTerm">
+            <span *ngIf="criterioBusca === 'todos'">Pesquisar</span>
+            <span *ngIf="criterioBusca === 'codigo'">Código do Exame</span>
+            <span *ngIf="criterioBusca === 'paciente'">Nome do Paciente</span>
+            <span *ngIf="criterioBusca === 'cpf'">CPF</span>
+            <span *ngIf="criterioBusca === 'exame'">Tipo de Exame</span>
+          </label>
+          <div class="search-input-group">
+            <input 
+              type="text" 
+              id="searchTerm"
+              [(ngModel)]="searchTerm"
+              class="form-control"
+              [placeholder]="criterioBusca === 'todos' ? 'Digite para buscar em todos os campos...' :
+                             criterioBusca === 'codigo' ? 'Digite o código...' :
+                             criterioBusca === 'paciente' ? 'Digite o nome do paciente...' :
+                             criterioBusca === 'cpf' ? 'Digite o CPF...' :
+                             'Digite o tipo de exame...'"
+            >
+            <button 
+              type="button" 
+              class="btn btn-primary"
+              (click)="buscarExames()"
+              [disabled]="buscandoExames || !searchTerm || searchTerm.length < 3"
+            >
+              <span *ngIf="!buscandoExames">Pesquisar</span>
+              <span *ngIf="buscandoExames">Buscando...</span>
+            </button>
+          </div>
         </div>
 
         <div class="filter-actions">
           <button 
             class="btn btn-secondary btn-sm"
             (click)="limparFiltros()"
-            *ngIf="searchTerm || filtroStatus !== 'todos'"
+            *ngIf="searchTerm || filtroStatus !== 'todos' || criterioBusca !== 'todos'"
           >
             Limpar
           </button>

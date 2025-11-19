@@ -28,6 +28,39 @@
   .form-group {
     margin-bottom: $spacing-md;
   }
+
+  .search-input-group {
+    display: flex;
+    gap: $spacing-sm;
+
+    .form-control {
+      flex: 1;
+    }
+
+    .btn {
+      white-space: nowrap;
+      min-width: 120px;
+    }
+  }
+
+  .form-row {
+    display: flex;
+    gap: $spacing-md;
+    margin-bottom: $spacing-md;
+
+    .form-group {
+      flex: 1;
+      margin-bottom: 0;
+
+      &.col-md-4 {
+        flex: 0 0 30%;
+      }
+
+      &.col-md-8 {
+        flex: 0 0 calc(70% - #{$spacing-md});
+      }
+    }
+  }
 }
 
 .search-results {

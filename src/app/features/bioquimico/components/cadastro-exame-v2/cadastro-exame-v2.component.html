@@ -21,17 +21,49 @@
             <h3>Paciente</h3>
 
             <div *ngIf="!pacienteSelecionado" class="paciente-search">
-              <div class="form-group">
-                <label for="searchPaciente">Buscar Paciente</label>
-                <input 
-                  type="text" 
-                  id="searchPaciente"
-                  [(ngModel)]="searchPaciente"
-                  [ngModelOptions]="{standalone: true}"
-                  (input)="buscarPacientes()"
-                  class="form-control"
-                  placeholder="Digite o nome, CPF ou CNS do paciente..."
-                >
+              <div class="form-row">
+                <div class="form-group col-md-4">
+                  <label for="criterioBusca">Buscar por</label>
+                  <select 
+                    id="criterioBusca"
+                    [(ngModel)]="criterioBusca"
+                    [ngModelOptions]="{standalone: true}"
+                    class="form-control"
+                  >
+                    <option value="nome">Nome</option>
+                    <option value="cpf">CPF</option>
+                    <option value="cns">CNS</option>
+                  </select>
+                </div>
+                
+                <div class="form-group col-md-8">
+                  <label for="searchPaciente">
+                    <span *ngIf="criterioBusca === 'nome'">Nome do Paciente</span>
+                    <span *ngIf="criterioBusca === 'cpf'">CPF</span>
+                    <span *ngIf="criterioBusca === 'cns'">CNS</span>
+                  </label>
+                  <div class="search-input-group">
+                    <input 
+                      type="text" 
+                      id="searchPaciente"
+                      [(ngModel)]="searchPaciente"
+                      [ngModelOptions]="{standalone: true}"
+                      class="form-control"
+                      [placeholder]="criterioBusca === 'nome' ? 'Digite o nome do paciente...' : 
+                                     criterioBusca === 'cpf' ? 'Digite o CPF...' : 
+                                     'Digite o CNS...'"
+                    >
+                    <button 
+                      type="button" 
+                      class="btn btn-primary"
+                      (click)="buscarPacientes()"
+                      [disabled]="buscandoPaciente || !searchPaciente || searchPaciente.length < 3"
+                    >
+                      <span *ngIf="!buscandoPaciente">Pesquisar</span>
+                      <span *ngIf="buscandoPaciente">Buscando...</span>
+                    </button>
+                  </div>
+                </div>
               </div>
 
               <!-- Lista de resultados -->
@@ -47,10 +79,6 @@
                     <small *ngIf="paciente.cns">CNS: {{ paciente.cns | cns }}</small>
                   </div>
                 </div>
-              </div>
-
-              <div class="loading-text" *ngIf="buscandoPaciente">
-                Buscando pacientes...
               </div>
             </div>
 

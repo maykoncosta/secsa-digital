@@ -29,28 +29,16 @@ export class ListaPacientesComponent implements OnInit {
 
   // Filtros
   searchTerm = '';
-  filtroTipo: 'todos' | 'nome' | 'cpf' | 'cns' = 'todos';
+  filtroTipo: 'nome' | 'cpf' | 'cns' = 'nome';
+  buscandoPacientes = false;
   
   // Paginação
   paginaAtual = 1;
   itensPorPagina = 10;
   totalPaginas = 0;
-  
-  // Search subject para debounce
-  private searchSubject = new Subject<string>();
 
   ngOnInit(): void {
     this.carregarPacientes();
-    this.setupSearch();
-  }
-
-  private setupSearch(): void {
-    this.searchSubject.pipe(
-      debounceTime(400),
-      distinctUntilChanged()
-    ).subscribe(termo => {
-      this.aplicarFiltros();
-    });
   }
 
   carregarPacientes(): void {
@@ -71,43 +59,56 @@ export class ListaPacientesComponent implements OnInit {
     });
   }
 
-  onSearchChange(termo: string): void {
-    this.searchTerm = termo;
-    this.searchSubject.next(termo);
+  buscarPacientes(): void {
+    const termo = this.searchTerm.trim();
+    
+    if (!termo || termo.length < 3) {
+      this.errorMessage = 'Digite pelo menos 3 caracteres para buscar.';
+      return;
+    }
+
+    this.buscandoPacientes = true;
+    this.errorMessage = '';
+
+    let observable$: Observable<Usuario[]>;
+    
+    switch (this.filtroTipo) {
+      case 'cpf':
+        observable$ = this.pacienteService.buscarPorCpf(termo).pipe(
+          switchMap(paciente => of(paciente ? [paciente] : []))
+        );
+        break;
+      case 'cns':
+        observable$ = this.pacienteService.buscarPorCns(termo).pipe(
+          switchMap(paciente => of(paciente ? [paciente] : []))
+        );
+        break;
+      case 'nome':
+      default:
+        observable$ = this.pacienteService.buscarPorNome(termo);
+        break;
+    }
+
+    observable$.subscribe({
+      next: (pacientes: Usuario[]) => {
+        this.pacientes = pacientes;
+        this.aplicarFiltros();
+        this.buscandoPacientes = false;
+        
+        if (pacientes.length === 0) {
+          this.errorMessage = 'Nenhum paciente encontrado.';
+        }
+      },
+      error: (error: any) => {
+        console.error('Erro ao buscar pacientes:', error);
+        this.errorMessage = 'Erro ao buscar pacientes. Tente novamente.';
+        this.buscandoPacientes = false;
+      }
+    });
   }
 
   aplicarFiltros(): void {
     let resultado = [...this.pacientes];
-
-    if (this.searchTerm.trim()) {
-      const termo = this.searchTerm.toLowerCase().trim();
-
-      resultado = resultado.filter(paciente => {
-        switch (this.filtroTipo) {
-          case 'nome':
-            return paciente.nome.toLowerCase().includes(termo);
-          
-          case 'cpf':
-            const cpfLimpo = paciente.cpf.replace(/\D/g, '');
-            const termoLimpo = termo.replace(/\D/g, '');
-            return cpfLimpo.includes(termoLimpo);
-          
-          case 'cns':
-            if (!paciente.cns) return false;
-            const cnsLimpo = paciente.cns.replace(/\D/g, '');
-            const termoLimpoCns = termo.replace(/\D/g, '');
-            return cnsLimpo.includes(termoLimpoCns);
-          
-          default: // 'todos'
-            const cpf = paciente.cpf.replace(/\D/g, '');
-            const termoNum = termo.replace(/\D/g, '');
-            
-            return paciente.nome.toLowerCase().includes(termo) ||
-                   cpf.includes(termoNum) ||
-                   (paciente.cns && paciente.cns.replace(/\D/g, '').includes(termoNum));
-        }
-      });
-    }
 
     this.pacientesFiltrados = resultado;
     this.calcularPaginacao();
@@ -201,8 +202,9 @@ export class ListaPacientesComponent implements OnInit {
 
   limparFiltros(): void {
     this.searchTerm = '';
-    this.filtroTipo = 'todos';
+    this.filtroTipo = 'nome';
     this.paginaAtual = 1;
-    this.aplicarFiltros();
+    this.errorMessage = '';
+    this.carregarPacientes();
   }
 }
