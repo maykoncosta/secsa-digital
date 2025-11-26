@@ -1,41 +1,70 @@
 <div class="paciente-layout">
-  <!-- Header -->
-  <header class="header">
-    <div class="header-content">
-      <div class="logo">
-        <h1>SECSA Digital</h1>
-        <span class="subtitle">Portal do Paciente</span>
-      </div>
-      
-      <div class="user-info">
-        <div class="user-details">
-          <strong>{{ paciente.nome }}</strong>
-          <small>CPF: {{ paciente.cpf }}</small>
-        </div>
-        <button class="btn-logout" (click)="logout()" title="Sair">
-          🚪
-        </button>
-      </div>
+  <!-- Sidebar -->
+  <aside class="sidebar" [class.fechado]="!menuAberto">
+    <div class="sidebar-header">
+      <h1 class="logo">
+        <span class="logo-icon">🩺</span>
+        <span class="logo-text" *ngIf="menuAberto">SECSA Digital</span>
+      </h1>
+      <div class="subtitle" *ngIf="menuAberto">Portal do Paciente</div>
     </div>
-  </header>
 
-  <!-- Navigation -->
-  <nav class="navigation">
-    <a routerLink="/paciente/exames" routerLinkActive="active" class="nav-link">
-      📋 Meus Exames
-    </a>
-    <a routerLink="/paciente/perfil" routerLinkActive="active" class="nav-link">
-      👤 Meu Perfil
-    </a>
-  </nav>
+    <nav class="sidebar-nav">
+      <a 
+        routerLink="/paciente/exames" 
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{exact: false}"
+        class="nav-item"
+        title="Meus Exames"
+      >
+        <span class="nav-icon">📋</span>
+        <span class="nav-text" *ngIf="menuAberto">Meus Exames</span>
+      </a>
+
+      <a 
+        routerLink="/paciente/perfil" 
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{exact: false}"
+        class="nav-item"
+        title="Meu Perfil"
+      >
+        <span class="nav-icon">👤</span>
+        <span class="nav-text" *ngIf="menuAberto">Meu Perfil</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button 
+        class="nav-item logout-btn"
+        (click)="logout()"
+        title="Sair"
+      >
+        <span class="nav-icon">🚪</span>
+        <span class="nav-text" *ngIf="menuAberto">Sair</span>
+      </button>
+    </div>
+  </aside>
 
   <!-- Main Content -->
-  <main class="main-content">
-    <router-outlet></router-outlet>
-  </main>
+  <div class="main-content">
+    <!-- Header -->
+    <header class="header">
+      <button class="menu-toggle" (click)="toggleMenu()" title="Toggle Menu">
+        <span class="menu-icon">☰</span>
+      </button>
 
-  <!-- Footer -->
-  <footer class="footer">
-    <p>&copy; 2024 SECSA - Secretaria de Saúde. Todos os direitos reservados.</p>
-  </footer>
+      <div class="header-right">
+        <div class="user-info">
+          <span class="user-name">{{ paciente.nome }}</span>
+          <span class="user-cpf">CPF: {{ paciente.cpf }}</span>
+        </div>
+        <div class="user-avatar">👤</div>
+      </div>
+    </header>
+
+    <!-- Page Content -->
+    <main class="content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
 </div>

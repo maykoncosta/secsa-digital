@@ -7,6 +7,10 @@ $secondary-color: #1976D2; // Azul para destaques
 $secondary-light: #42A5F5;
 $secondary-dark: #0D47A1;
 
+$accent-color: #7B1FA2; // Roxo para área do paciente
+$accent-light: #9C27B0;
+$accent-dark: #4A148C;
+
 $success-color: #4CAF50;
 $warning-color: #FF9800;
 $error-color: #F44336;
@@ -50,12 +54,14 @@ $spacing-md: 16px;
 $spacing-lg: 24px;
 $spacing-xl: 32px;
 $spacing-xxl: 48px;
+$spacing-3xl: 64px;
 
 // Border radius
 $border-radius-sm: 4px;
 $border-radius-md: 8px;
 $border-radius-lg: 12px;
 $border-radius-xl: 16px;
+$border-radius-full: 9999px;
 $border-radius-round: 50%;
 
 // Sombras

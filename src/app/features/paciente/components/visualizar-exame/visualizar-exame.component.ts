@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ExameRealizadoService } from '../../../bioquimico/services/exame-realizado.service';
 import { ExameRealizado, ParametroExameRealizado } from '../../../../core/models';
+import { PdfGeneratorService } from '../../../../shared/services/pdf-generator.service';
 
 @Component({
   selector: 'app-visualizar-exame',
@@ -15,6 +16,7 @@ export class VisualizarExameComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private exameRealizadoService = inject(ExameRealizadoService);
+  private pdfGeneratorService = inject(PdfGeneratorService);
 
   exame: ExameRealizado | null = null;
   parametros: ParametroExameRealizado[] = [];
@@ -54,15 +56,15 @@ export class VisualizarExameComponent implements OnInit {
     this.router.navigate(['/paciente/exames']);
   }
 
-  baixarPDF(): void {
+  async baixarPDF(): Promise<void> {
     if (!this.exame) return;
 
-    // TODO: Implementar geração de PDF real
-    alert('Funcionalidade de download de PDF será implementada em breve!');
-  }
-
-  imprimirExame(): void {
-    window.print();
+    try {
+      await this.pdfGeneratorService.gerarPdfExame(this.exame, this.parametros);
+    } catch (error) {
+      console.error('Erro ao gerar PDF:', error);
+      this.errorMessage = 'Erro ao gerar o PDF. Por favor, tente novamente.';
+    }
   }
 
   formatarData(data: any): string {

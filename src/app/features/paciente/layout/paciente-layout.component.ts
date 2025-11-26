@@ -12,11 +12,17 @@ import { Router, RouterModule } from '@angular/router';
 export class PacienteLayoutComponent {
   private router = inject(Router);
 
+  menuAberto = true;
+
   // TODO: Pegar do Auth depois
   paciente = {
     nome: 'João da Silva',
     cpf: '123.456.789-00'
   };
+
+  toggleMenu(): void {
+    this.menuAberto = !this.menuAberto;
+  }
 
   logout(): void {
     // TODO: Implementar logout real
