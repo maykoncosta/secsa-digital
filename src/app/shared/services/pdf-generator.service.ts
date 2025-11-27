@@ -135,13 +135,12 @@ export class PdfGeneratorService {
         p.nome,
         p.valor,
         p.unidade || '-',
-        p.valorReferencia || '-',
-        this.getInterpretacaoTexto(p.interpretacao)
+        p.valorReferencia || '-'
       ]);
 
       autoTable(doc, {
         startY: yPosition,
-        head: [['Parâmetro', 'Resultado', 'Unidade', 'Valor de Referência', 'Interpretação']],
+        head: [['Parâmetro', 'Resultado', 'Unidade', 'Valor de Referência']],
         body: tableData,
         theme: 'striped',
         headStyles: {
@@ -154,21 +153,10 @@ export class PdfGeneratorService {
           fontSize: 9
         },
         columnStyles: {
-          0: { cellWidth: 45 },
-          1: { cellWidth: 30, halign: 'center' },
-          2: { cellWidth: 25, halign: 'center' },
-          3: { cellWidth: 45, halign: 'center' },
-          4: { cellWidth: 30, halign: 'center' }
-        },
-        didParseCell: (data) => {
-          // Destaca valores alterados
-          if (data.column.index === 4 && data.section === 'body') {
-            const interpretacao = grupo.parametros[data.row.index]?.interpretacao;
-            if (interpretacao === 'alterado') {
-              data.cell.styles.textColor = [255, 152, 0]; // Laranja
-              data.cell.styles.fontStyle = 'bold';
-            }
-          }
+          0: { cellWidth: 55 },
+          1: { cellWidth: 35, halign: 'center' },
+          2: { cellWidth: 30, halign: 'center' },
+          3: { cellWidth: 60, halign: 'center' }
         },
         margin: { left: 15, right: 15 }
       });
@@ -264,16 +252,7 @@ export class PdfGeneratorService {
     return format(d, 'dd/MM/yyyy HH:mm');
   }
 
-  /**
-   * Retorna texto da interpretação
-   */
-  private getInterpretacaoTexto(interpretacao: string): string {
-    const textos: { [key: string]: string } = {
-      'normal': 'Normal',
-      'alterado': 'Alterado'
-    };
-    return textos[interpretacao] || interpretacao;
-  }
+
 
   /**
    * Carrega imagem e converte para base64

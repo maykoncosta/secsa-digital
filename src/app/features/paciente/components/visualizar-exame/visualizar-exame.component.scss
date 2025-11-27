@@ -317,35 +317,6 @@
               &.text-center {
                 text-align: center;
               }
-
-              .interpretacao-badge {
-                display: inline-flex;
-                align-items: center;
-                gap: 0.3rem;
-                padding: 0.4rem 0.8rem;
-                border-radius: 20px;
-                font-size: 0.85rem;
-                font-weight: 500;
-
-                &.interpretacao-normal {
-                  background: #d4edda;
-                  color: #155724;
-                }
-
-                &.interpretacao-alterado {
-                  background: #fff3cd;
-                  color: #856404;
-                }
-
-                &.interpretacao-critico {
-                  background: #f8d7da;
-                  color: #721c24;
-                }
-
-                .icon {
-                  font-size: 1rem;
-                }
-              }
             }
           }
         }

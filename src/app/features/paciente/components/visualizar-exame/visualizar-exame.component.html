@@ -111,7 +111,6 @@
               <th>Resultado</th>
               <th>Unidade</th>
               <th>Valor de Referência</th>
-              <th class="text-center">Interpretação</th>
             </tr>
           </thead>
           <tbody>
@@ -120,15 +119,6 @@
               <td class="valor-resultado">{{ parametro.valor }}</td>
               <td>{{ parametro.unidade }}</td>
               <td class="valor-referencia">{{ parametro.valorReferencia }}</td>
-              <td class="text-center">
-                <span 
-                  class="interpretacao-badge" 
-                  [ngClass]="getInterpretacaoClass(parametro.interpretacao)"
-                >
-                  <span class="icon">{{ getInterpretacaoIcon(parametro.interpretacao) }}</span>
-                  {{ parametro.interpretacao }}
-                </span>
-              </td>
             </tr>
           </tbody>
         </table>

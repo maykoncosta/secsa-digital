@@ -339,7 +339,86 @@ export class CadastroExameV2Component implements OnInit {
         if (interpretacao !== 'normal') {
             console.log(`⚠️ ${parametroGroup.get('nome')?.value}: ${valor} - ${interpretacao.toUpperCase()}`);
         }
+
+        // Calcula índices hematimétricos automaticamente (Hemograma)
+        this.calcularIndicesHematimetricos();
     }
+
+    /**
+     * Calcula índices hematimétricos automaticamente
+     * VCM = hematócrito / eritrócitos * 10
+     * HCM = hemoglobina / eritrócitos * 10
+     * CHCM = hemoglobina / hematócrito * 100
+     * 
+     * Este método é chamado automaticamente quando qualquer valor do hemograma é alterado
+     */
+    private calcularIndicesHematimetricos(): void {
+        // Busca valores necessários
+        const hematocrito = this.buscarValorParametro(['HEMATÓCRITO', 'HEMATOCRITO']);
+        const eritrocitos = this.buscarValorParametro(['ERITRÓCITOS', 'ERITROCITOS', 'HEMÁCIAS', 'HEMACIAS']);
+        const hemoglobina = this.buscarValorParametro(['HEMOGLOBINA']);
+
+        // VCM = hematócrito / eritrócitos * 10
+        if (hematocrito !== null && eritrocitos !== null && eritrocitos !== 0) {
+            const vcm = (hematocrito / eritrocitos) * 10;
+            this.preencherParametroCalculado(['VCM'], vcm);
+        }
+
+        // HCM = hemoglobina / eritrócitos * 10
+        if (hemoglobina !== null && eritrocitos !== null && eritrocitos !== 0) {
+            const hcm = (hemoglobina / eritrocitos) * 10;
+            this.preencherParametroCalculado(['HCM'], hcm);
+        }
+
+        // CHCM = hemoglobina / hematócrito * 100
+        if (hemoglobina !== null && hematocrito !== null && hematocrito !== 0) {
+            const chcm = (hemoglobina / hematocrito) * 100;
+            this.preencherParametroCalculado(['CHCM'], chcm);
+        }
+    }
+
+    /**
+     * Busca valor de um parâmetro por nome (aceita variações)
+     */
+    private buscarValorParametro(nomesVariacoes: string[]): number | null {
+        for (const parametro of this.parametrosArray.controls) {
+            const nome = parametro.get('nome')?.value?.toUpperCase().trim();
+            const valor = parametro.get('valor')?.value;
+
+            if (nomesVariacoes.some(variacao => nome?.includes(variacao))) {
+                const valorNum = typeof valor === 'string' ? parseFloat(valor.replace(',', '.')) : valor;
+                if (!isNaN(valorNum) && isFinite(valorNum)) {
+                    return valorNum;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Preenche valor calculado em um parâmetro
+     */
+    private preencherParametroCalculado(nomesVariacoes: string[], valor: number): void {
+        const valorFormatado = valor.toFixed(2);
+
+        for (let i = 0; i < this.parametrosArray.controls.length; i++) {
+            const parametro = this.parametrosArray.at(i);
+            const nome = parametro.get('nome')?.value?.toUpperCase().trim();
+
+            if (nomesVariacoes.some(variacao => nome?.includes(variacao))) {
+                const valorAtual = parametro.get('valor')?.value;
+                
+                // Só atualiza se o valor mudou (evita loop infinito)
+                if (valorAtual !== valorFormatado) {
+                    // Atualiza o valor calculado
+                    parametro.patchValue({ valor: valorFormatado }, { emitEvent: false });
+                }
+                break;
+            }
+        }
+    }
+
+
 
     /**
      * Verifica se deve mostrar cabeçalho de grupo
@@ -367,57 +446,22 @@ export class CadastroExameV2Component implements OnInit {
     }
 
     /**
+     * Verifica se o parâmetro é calculado automaticamente
+     */
+    isParametroCalculado(parametro: any): boolean {
+        const nome = parametro.get('nome')?.value?.toUpperCase().trim();
+        const parametrosCalculados = ['VCM', 'HCM', 'CHCM'];
+        return parametrosCalculados.some(calc => nome?.includes(calc));
+    }
+
+    /**
      * Determina sexo por extenso
      */
     determinarSexo(sexo: string): string {
         return sexo === 'M' ? 'Masculino' : 'Feminino';
     }
 
-    /**
-     * Retorna a classe CSS baseada na interpretação
-     */
-    getInterpretacaoClass(interpretacao: string): string {
-        return interpretacao === 'alterado' ? 'badge-warning' : 'badge-success';
-    }
 
-    /**
-     * Retorna o ícone baseado na interpretação
-     */
-    getInterpretacaoIcon(interpretacao: string): string {
-        return interpretacao === 'alterado' ? '⚠️' : '✓';
-    }
-
-    /**
-     * Verifica se há algum valor alterado
-     */
-    hasValoresAlterados(): boolean {
-        return this.parametrosArray.controls.some(control => {
-            const interpretacao = control.get('interpretacao')?.value;
-            return interpretacao === 'alterado';
-        });
-    }
-
-    /**
-     * Conta valores por interpretação
-     */
-    contarInterpretacoes(): { normal: number; alterado: number } {
-        const contagem = { normal: 0, alterado: 0 };
-        
-        this.parametrosArray.controls.forEach(control => {
-            const valor = control.get('valor')?.value;
-            const interpretacao = control.get('interpretacao')?.value;
-            
-            if (valor) {
-                if (interpretacao === 'alterado') {
-                    contagem.alterado++;
-                } else {
-                    contagem.normal++;
-                }
-            }
-        });
-        
-        return contagem;
-    }
 
     /**
      * Submete o formulário

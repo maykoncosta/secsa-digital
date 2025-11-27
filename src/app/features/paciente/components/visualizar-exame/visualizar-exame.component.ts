@@ -91,18 +91,7 @@ export class VisualizarExameComponent implements OnInit {
     });
   }
 
-  getInterpretacaoClass(interpretacao: string): string {
-    return `interpretacao-${interpretacao}`;
-  }
 
-  getInterpretacaoIcon(interpretacao: string): string {
-    const icons: { [key: string]: string } = {
-      'normal': '✓',
-      'alterado': '⚠',
-      'critico': '⚠'
-    };
-    return icons[interpretacao] || '•';
-  }
 
   // Agrupa parâmetros por grupo
   get parametrosAgrupados(): { grupo: string; parametros: ParametroExameRealizado[] }[] {

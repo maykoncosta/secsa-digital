@@ -220,29 +220,7 @@
     }
   }
 
-  .status-resumo {
-    display: flex;
-    gap: $spacing-md;
-    align-items: center;
 
-    .resumo-item {
-      padding: $spacing-xs $spacing-md;
-      border-radius: $border-radius-md;
-      font-size: $font-size-sm;
-      font-weight: $font-weight-bold;
-      
-      &.critico {
-        background: lighten($error-color, 40%);
-        color: darken($error-color, 10%);
-        animation: pulse-danger 1.5s infinite;
-      }
-
-      &.alterado {
-        background: lighten($warning-color, 38%);
-        color: darken($warning-color, 15%);
-      }
-    }
-  }
 }
 
 .parametros-table {
@@ -298,12 +276,6 @@
         &:hover:not(.grupo-header) {
           background: $bg-light;
         }
-
-        // Destaque para valores alterados
-        &.valor-alterado {
-          background: lighten($warning-color, 42%);
-          border-left: 3px solid $warning-color;
-        }
       }
 
       td {
@@ -311,9 +283,30 @@
         vertical-align: middle;
         font-size: $font-size-sm;
 
+        .input-wrapper {
+          position: relative;
+          display: flex;
+          align-items: center;
+        }
+
         .form-control-sm {
           padding: $spacing-xs $spacing-sm;
           font-size: $font-size-sm;
+
+          &.campo-calculado {
+            background-color: lighten($info-color, 45%);
+            border-color: $info-color;
+            cursor: not-allowed;
+            font-weight: $font-weight-semibold;
+            padding-right: 30px;
+          }
+        }
+
+        .calc-icon {
+          position: absolute;
+          right: 8px;
+          font-size: 14px;
+          pointer-events: none;
         }
       }
     }

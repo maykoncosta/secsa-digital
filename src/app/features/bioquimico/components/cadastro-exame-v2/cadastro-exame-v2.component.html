@@ -157,11 +157,6 @@
                     {{ parametrosArray.length }} parâmetro(s)
                   </small>
                 </div>
-                <div class="status-resumo" *ngIf="hasValoresAlterados()">
-                  <span class="resumo-item alterado" *ngIf="contarInterpretacoes().alterado > 0">
-                    ⚠️ {{ contarInterpretacoes().alterado }} Alterado(s)
-                  </span>
-                </div>
               </div>
             </div>
 
@@ -173,14 +168,13 @@
                     <th>Valor</th>
                     <th>Unidade</th>
                     <th>Valor de Referência</th>
-                    <th>Status</th>
                   </tr>
                 </thead>
                 <tbody formArrayName="parametros">
                   <ng-container *ngFor="let parametro of parametrosArray.controls; let i = index">
                     <!-- Cabeçalho do grupo -->
                     <tr *ngIf="mostrarCabecalhoGrupo(i)" class="grupo-header">
-                      <td colspan="5">
+                      <td colspan="4">
                         <strong class="grupo-titulo">{{ getNomeGrupo(i) }}</strong>
                       </td>
                     </tr>
@@ -188,46 +182,32 @@
                     <!-- Linha do parâmetro -->
                     <tr 
                       [formGroupName]="i"
-                      [class.valor-alterado]="parametro.get('interpretacao')?.value === 'alterado'"
                     >
                       <td>
                         <strong>{{ parametro.get('nome')?.value }}</strong>
                       </td>
                       <td>
-                        <input 
-                          [type]="parametro.get('tipo')?.value === 'numerico' ? 'number' : 'text'"
-                          formControlName="valor"
-                          class="form-control form-control-sm"
-                          (blur)="onValorChange(i)"
-                          [step]="parametro.get('tipo')?.value === 'numerico' ? '0.01' : ''"
-                          [placeholder]="parametro.get('tipo')?.value === 'texto' ? 'Digite o resultado' : '0.00'"
-                        >
+                        <div class="input-wrapper">
+                          <input 
+                            [type]="parametro.get('tipo')?.value === 'numerico' ? 'number' : 'text'"
+                            formControlName="valor"
+                            class="form-control form-control-sm"
+                            [class.campo-calculado]="isParametroCalculado(parametro)"
+                            (blur)="onValorChange(i)"
+                            [step]="parametro.get('tipo')?.value === 'numerico' ? '0.01' : ''"
+                            [placeholder]="parametro.get('tipo')?.value === 'texto' ? 'Digite o resultado' : '0.00'"
+                            [readonly]="isParametroCalculado(parametro)"
+                          >
+                          <span *ngIf="isParametroCalculado(parametro)" class="calc-icon" title="Valor calculado automaticamente">
+                            🔢
+                          </span>
+                        </div>
                       </td>
                       <td>
                         <small class="text-muted">{{ parametro.get('unidade')?.value || '-' }}</small>
                       </td>
                       <td>
                         <small class="text-muted">{{ parametro.get('valorReferencia')?.value || '-' }}</small>
-                      </td>
-                      <td>
-                        <span 
-                          *ngIf="parametro.get('interpretacao')?.value === 'alterado'" 
-                          class="badge badge-warning"
-                        >
-                          Alterado
-                        </span>
-                        <span 
-                          *ngIf="parametro.get('interpretacao')?.value === 'critico'" 
-                          class="badge badge-danger"
-                        >
-                          Crítico
-                        </span>
-                        <span 
-                          *ngIf="parametro.get('interpretacao')?.value === 'normal' && parametro.get('valor')?.value" 
-                          class="badge badge-success"
-                        >
-                          Normal
-                        </span>
                       </td>
                     </tr>
                   </ng-container>
