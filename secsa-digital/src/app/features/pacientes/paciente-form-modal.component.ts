@@ -395,10 +395,24 @@ export class PacienteFormModalComponent implements OnInit {
     return `${baseClass} border-gray-300 focus:border-primary focus:ring-primary/20`;
   }
 
-  private formatDate(date: Date): string {
+  private formatDate(date: Date | any): string {
+    if (!date) return '';
+    
+    // Se for Timestamp do Firestore, converter para Date
+    if (date.toDate && typeof date.toDate === 'function') {
+      date = date.toDate();
+    }
+    
+    // Se for Date, formatar
     if (date instanceof Date) {
       return date.toISOString().split('T')[0];
     }
+    
+    // Se for string já formatada
+    if (typeof date === 'string') {
+      return date.split('T')[0];
+    }
+    
     return '';
   }
 }
