@@ -1,206 +1,221 @@
-# SECSA Digital
+<div align="center">
+  <h1>🏥 SECSA Digital</h1>
+  <p><strong>Gestão Laboratorial Inteligente</strong></p>
+  
+  <p>Sistema web de alta performance para gerenciamento de laboratórios de análises clínicas</p>
 
-Sistema de gerenciamento de exames laboratoriais para o SUS (Sistema Único de Saúde).
+  ![Angular](https://img.shields.io/badge/Angular-18+-DD0031?style=for-the-badge&logo=angular&logoColor=white)
+  ![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
+  ![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
+  ![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
+</div>
+
+---
 
 ## 📋 Sobre o Projeto
 
-SECSA Digital é uma aplicação web desenvolvida para facilitar o gerenciamento de pacientes e exames laboratoriais em estabelecimentos de saúde que atendem pelo SUS. O sistema oferece:
+Sistema web desenvolvido com Angular 18, Tailwind CSS e Firebase, utilizando uma arquitetura data-driven onde a lógica dos exames é configurada dinamicamente via banco de dados. Ideal para laboratórios de análises clínicas que buscam modernização e eficiência.
 
-- Cadastro e gerenciamento de pacientes (com CPF e CNS)
-- Registro de exames laboratoriais (Hemograma, Urina, Fezes)
-- Comparação automática com valores de referência
-- Interface intuitiva para bioquímicos
-- Integração com Firebase/Firestore
+### ✨ Principais Características
 
-## 🚀 Tecnologias
+- 🔄 **Exames Dinâmicos**: Configuração de exames via banco de dados, sem necessidade de alterar código
+- 🧮 **Cálculos Automáticos**: Processamento reativo em tempo real usando Angular Signals
+- 📱 **Design Responsivo**: Interface moderna com Tailwind CSS
+- 🔐 **Autenticação Segura**: Integração completa com Firebase Authentication
+- 📄 **Geração de Laudos**: Exportação de relatórios em PDF com jsPDF
+- ⚡ **Alta Performance**: Standalone Components e otimizações do Angular 18+
 
-- **Angular 19.0.0** - Framework frontend
-- **TypeScript 5.6.3** - Linguagem de programação
-- **Firebase 11.0.2** - Backend as a Service
-  - Firestore - Banco de dados NoSQL
-  - Authentication - Autenticação (planejado)
-  - Cloud Functions - Funções serverless (planejado)
-- **SCSS** - Estilização
-- **date-fns 4.1.0** - Manipulação de datas
+---
 
-## 📦 Pré-requisitos
+## 🛠️ Stack Tecnológica
 
-- Node.js 18.x ou superior
+| Categoria | Tecnologia |
+|-----------|-----------|
+| **Frontend** | Angular 18+ (Standalone Components & Signals) |
+| **Estilização** | Tailwind CSS (Design Utilitário e Responsivo) |
+| **Backend & DB** | Firebase (Firestore & Authentication) |
+| **Ícones** | Lucide Angular |
+| **Relatórios** | jsPDF + AutoTable |
+
+---
+
+## 🏗️ Arquitetura
+
+O projeto segue os princípios da **Clean Architecture**, garantindo separação de responsabilidades e código limpo:
+
+```
+src/app/
+├── core/               # Singleton Services, Guards, Interceptors e Configurações Globais
+│   ├── auth/           # Lógica de Autenticação Firebase
+│   └── services/       # Abstração do Firestore e Notificações (Toast/Modais)
+│
+├── data/               # Camada de Dados e Regras de Negócio
+│   ├── interfaces/     # Contratos TypeScript (Modelos de Dados)
+│   ├── constants/      # Fórmulas de cálculos (Hematologia) e Enums
+│   └── repositories/   # Classes de acesso a dados (Abstração da API)
+│
+├── shared/             # UI Kit e Componentes Reutilizáveis (Dumb Components)
+│   ├── components/     # Botões, Inputs (Tailwind), Modais, Spinners
+│   ├── pipes/          # Formatação (CPF, CNS, Telefone, Datas)
+│   └── directives/     # Máscaras de input e validações de interface
+│
+└── features/           # Módulos de Funcionalidades (Lazy Loading)
+    ├── pacientes/      # CRUD e Perfil de Pacientes
+    ├── exames/         # Lançamento, Histórico e Laudos Dinâmicos
+    └── dashboard/      # Métricas e Visão Geral
+```
+
+---
+
+## 📊 Modelagem de Dados (Firestore)
+
+### 1. Coleção: `configuracoesExames`
+
+Armazena o "esquema" do exame. Isso permite adicionar novos tipos de exames sem alterar o código do Angular.
+
+```typescript
+interface SchemaExame {
+  id: string;
+  nome: string;          // ex: "Hemograma Completo"
+  categoria: string;     // ex: "Hematologia"
+  ativo: boolean;
+  parametros: Array<{
+    id: string;
+    label: string;
+    unidade: string;
+    tipo: 'number' | 'text';
+    grupo: string;       // ex: "Eritrograma"
+    isCalculado: boolean;
+    formula?: string;    // Lógica para VCM, HCM, etc.
+  }>;
+}
+```
+
+### 2. Coleção: `examesRealizados`
+
+Salva o resultado e um snapshot dos valores de referência vigentes no momento do exame.
+
+```typescript
+interface ExameRealizado {
+  uid: string;
+  paciente: { 
+    id: string; 
+    nome: string; 
+    cpf: string; 
+    sexo: 'M' | 'F'; 
+    idadeNaData: number 
+  };
+  status: 'pendente' | 'finalizado' | 'liberado';
+  resultados: Record<string, any>; // Mapeamento idParametro -> valor
+  dataColeta: Timestamp;
+}
+```
+
+---
+
+## 🩸 Lógica de Negócio: O Hemograma
+
+O sistema utiliza **Angular Signals** para processamento reativo de cálculos em tempo real:
+
+- **Eritrograma**: Cálculos automáticos de $VCM$, $HCM$ e $CHCM$ baseados em Hemácias, Hemoglobina e Hematócrito.
+- **Leucograma**: Entrada de valores em % calcula automaticamente os valores absolutos em mm³ usando o total de Leucócitos.
+- **Validação**: Comparação automática com `valoresReferencia` filtrados por sexo e faixa etária do paciente.
+
+---
+
+## 🎨 Padrões de Design e UI
+
+Para evitar a "falta de padrão", o projeto segue estas diretrizes:
+
+### Design System
+
+- **Tailwind Primeiro**: Nenhuma folha de estilo CSS/SCSS gigante. Estilos aplicados via utilitários.
+- **Componentização**: Inputs e Botões são componentes únicos em `shared/` para manter a consistência visual.
+- **Ícones**: Uso padronizado da biblioteca Lucide.
+
+### Estados de Feedback
+
+| Status | Estilo | Cor |
+|--------|--------|-----|
+| 🟢 Normal | `bg-green-100 text-green-700` | Verde |
+| 🟡 Alterado | `bg-yellow-100 text-yellow-700` | Amarelo |
+
+---
+
+## 🚀 Instalação e Setup
+
+### Pré-requisitos
+
+- Node.js (v18 ou superior)
 - npm ou yarn
-- Conta no Firebase
+- Conta Firebase configurada
 
-## 🔧 Instalação
+### Passos
 
-1. Clone o repositório:
-```bash
-git clone <seu-repositorio>
-cd secsa-digital
-```
+1. **Clone o projeto:**
+   ```bash
+   git clone https://github.com/seu-usuario/secsa-digital.git
+   cd secsa-digital
+   ```
 
-2. Instale as dependências:
-```bash
-npm install
-```
+2. **Instale as dependências:**
+   ```bash
+   npm install
+   ```
 
-3. Configure o Firebase:
-   - Crie um projeto no [Firebase Console](https://console.firebase.google.com/)
-   - Copie os arquivos de exemplo:
-     ```bash
-     cp src/environments/environment.example.ts src/environments/environment.ts
-     cp src/environments/environment.prod.example.ts src/environments/environment.prod.ts
-     ```
-   - Preencha os arquivos com suas credenciais do Firebase
+3. **Configure as variáveis de ambiente:**
+   
+   Crie o arquivo `src/environments/environment.ts` com suas credenciais do Firebase:
+   ```typescript
+   export const environment = {
+     production: false,
+     firebase: {
+       apiKey: "SUA_API_KEY",
+       authDomain: "SEU_AUTH_DOMAIN",
+       projectId: "SEU_PROJECT_ID",
+       storageBucket: "SEU_STORAGE_BUCKET",
+       messagingSenderId: "SEU_MESSAGING_SENDER_ID",
+       appId: "SEU_APP_ID"
+     }
+   };
+   ```
 
-4. Configure o Firestore:
-   - Acesse o Firebase Console
-   - Crie um banco de dados Firestore em modo de teste
-   - As coleções serão criadas automaticamente ao usar o sistema
+4. **Execute o servidor de desenvolvimento:**
+   ```bash
+   ng serve
+   ```
 
-5. Popule os valores de referência (execute apenas uma vez):
-```bash
-npx ts-node src/app/scripts/popular-valores-referencia.ts
-```
+5. **Acesse a aplicação:**
+   
+   Abra seu navegador em `http://localhost:4200`
 
-## 🏃 Executando o Projeto
+---
 
-### Desenvolvimento
+## 📝 Roadmap
 
-```bash
-npm start
-# ou
-ng serve
-```
+- [x] Definição de Arquitetura e Tech Stack
+- [ ] Implementação do Core Service (Auth & Firestore)
+- [ ] UI Kit Shared (Componentes Tailwind Reutilizáveis)
+- [ ] Módulo de Pacientes
+- [ ] Motor de Exames Dinâmicos (Engine de Renderização)
+- [ ] Geração de PDF e Assinatura Digital
 
-Acesse `http://localhost:4200`
+---
 
-### Build de Produção
+## 👨‍💻 Autor
 
-```bash
-npm run build
-# ou
-ng build --configuration production
-```
+**Maykon Costa**
 
-Os arquivos de build estarão em `dist/`
+Arquitetando soluções sólidas para o setor da saúde.
 
-## 📁 Estrutura do Projeto
-
-```
-src/
-├── app/
-│   ├── core/
-│   │   ├── models/           # Interfaces TypeScript
-│   │   └── services/         # Serviços compartilhados
-│   ├── features/
-│   │   └── bioquimico/       # Módulo do bioquímico
-│   │       ├── components/
-│   │       │   ├── cadastro-paciente/
-│   │       │   ├── lista-pacientes/
-│   │       │   ├── detalhes-paciente/
-│   │       │   ├── cadastro-exame/
-│   │       │   └── lista-exames/
-│   │       ├── services/
-│   │       └── layout/
-│   ├── shared/
-│   │   └── pipes/            # Pipes reutilizáveis
-│   ├── scripts/              # Scripts utilitários
-│   └── assets/
-│       └── styles/           # Estilos globais
-├── environments/             # Configurações por ambiente
-└── styles.scss              # Estilos globais
-```
-
-## 🎯 Funcionalidades Implementadas
-
-### Fase 1 - Base ✅
-- Configuração do projeto Angular + Firebase
-- Modelos de dados (7 interfaces)
-- Serviço genérico Firestore
-- Pipes de formatação (CPF, CNS, Telefone)
-- Sistema de estilos com variáveis SCSS
-
-### Fase 2 - Módulo de Pacientes ✅
-- Cadastro de pacientes com validações
-  - CPF e CNS com validação de algoritmo oficial
-  - Verificação de unicidade assíncrona
-  - Campo de sexo (M/F) obrigatório
-  - Endereço completo com UF (select)
-- Listagem de pacientes
-  - Busca com debounce
-  - Filtros (nome, CPF, CNS)
-  - Paginação (10 itens)
-- Visualização de detalhes
-- Edição de pacientes
-- Desativação (soft delete)
-
-### Fase 3 - Módulo de Exames ✅
-- Cadastro de exames
-  - Busca de paciente por nome
-  - Seleção do tipo de exame (hemograma, urina, fezes)
-  - Formulário dinâmico com 43 parâmetros
-  - Comparação automática com valores de referência
-  - Indicação visual de valores alterados
-- Listagem de exames
-  - Filtros por status, tipo e busca
-  - Badges de status visual
-  - Contador de valores alterados
-  - Dias desde coleta
-- Valores de referência
-  - Diferenciados por sexo (M/F/ambos)
-  - Faixas etárias (planejado)
-  - 26 parâmetros cadastrados
-
-### Fase 4 - Recursos Avançados (Planejado)
-- Liberação de exames com PDF
-- Autenticação (CPF/CNS + senha)
-- Cloud Functions
-- Regras de segurança Firestore
-- Notificações
-
-## 📊 Coleções do Firestore
-
-1. **usuarios** - Pacientes e profissionais
-2. **exames** - Exames laboratoriais
-3. **valoresReferencia** - Parâmetros de referência
-4. **auditoria** - Logs de ações (planejado)
-5. **notificacoes** - Notificações do sistema (planejado)
-6. **configuracoes** - Configurações globais (planejado)
-7. **historico** - Histórico de alterações (planejado)
-
-## 🔒 Segurança
-
-- **IMPORTANTE**: Os arquivos `environment.ts` e `environment.prod.ts` contêm credenciais sensíveis e **não devem** ser commitados no Git
-- Use os arquivos `.example.ts` como template
-- Implemente as regras de segurança do Firestore antes de produção
-- Configure autenticação antes de disponibilizar publicamente
-
-## 🤝 Contribuindo
-
-1. Faça um fork do projeto
-2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
-3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
-4. Push para a branch (`git push origin feature/AmazingFeature`)
-5. Abra um Pull Request
-
-## 📝 Documentação Adicional
-
-Consulte os seguintes documentos na raiz do projeto:
-
-- `REQUISITOS.md` - Requisitos funcionais e não-funcionais
-- `REGRAS_NEGOCIO.md` - Regras de negócio detalhadas
-- `MODELAGEM_FIREBASE.md` - Estrutura do banco de dados
-- `VALORES_REFERENCIA.md` - Tabela de valores de referência
-- `PLANO_IMPLEMENTACAO.md` - Roadmap de desenvolvimento
-- `PROGRESSO.md` - Status de implementação
+---
 
 ## 📄 Licença
 
-Este projeto é proprietário e de uso interno.
+Este projeto é proprietário e todos os direitos são reservados.
 
-## 👥 Autores
+---
 
-- Desenvolvimento inicial - SECSA Digital Team
-
-## 📞 Suporte
-
-Para questões e suporte, entre em contato através dos canais oficiais da instituição.
+<div align="center">
+  <p>Desenvolvido com ❤️ para revolucionar a gestão laboratorial</p>
+</div>
