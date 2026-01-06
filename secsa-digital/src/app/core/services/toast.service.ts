@@ -43,6 +43,23 @@ export class ToastService {
     this.show(message, 'info', duration);
   }
 
+  // Aliases com prefixo show para compatibilidade
+  showSuccess(message: string, duration?: number): void {
+    this.success(message, duration);
+  }
+
+  showError(message: string, duration?: number): void {
+    this.error(message, duration);
+  }
+
+  showWarning(message: string, duration?: number): void {
+    this.warning(message, duration);
+  }
+
+  showInfo(message: string, duration?: number): void {
+    this.info(message, duration);
+  }
+
   remove(id: number): void {
     this.toasts.update(toasts => toasts.filter(t => t.id !== id));
   }

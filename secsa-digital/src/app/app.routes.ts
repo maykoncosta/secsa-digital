@@ -15,7 +15,12 @@ export const routes: Routes = [
     loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent)
   },
   {
-    path: 'exames',
-    loadComponent: () => import('./features/exames/exames.component').then(m => m.ExamesComponent)
+    path: 'exames/schemas',
+    loadComponent: () => import('./features/exames/schemas-exames-list.component').then(m => m.SchemasExamesListComponent)
+  },
+  {
+    path: 'exames/realizados',
+    loadComponent: () => import('./features/exames/exames-realizados-list.component').then(m => m.ExamesRealizadosListComponent)
   }
 ];
+

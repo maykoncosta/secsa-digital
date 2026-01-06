@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { LucideAngularModule, Users, FlaskConical, LayoutDashboard, Menu, X } from 'lucide-angular';
+import { LucideAngularModule, Users, FlaskConical, LayoutDashboard, ListChecks, Menu, X } from 'lucide-angular';
 
 @Component({
   selector: 'app-layout',
@@ -39,13 +39,23 @@ import { LucideAngularModule, Users, FlaskConical, LayoutDashboard, Menu, X } fr
           </a>
           
           <a
-            routerLink="/exames"
+            routerLink="/exames/schemas"
             routerLinkActive="bg-primary text-white"
             [routerLinkActiveOptions]="{exact: false}"
             class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors"
           >
             <lucide-icon [img]="FlaskConical" class="w-5 h-5" />
-            <span class="font-medium">Exames</span>
+            <span class="font-medium">Schemas de Exames</span>
+          </a>
+          
+          <a
+            routerLink="/exames/realizados"
+            routerLinkActive="bg-primary text-white"
+            [routerLinkActiveOptions]="{exact: false}"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors"
+          >
+            <lucide-icon [img]="ListChecks" class="w-5 h-5" />
+            <span class="font-medium">Exames Realizados</span>
           </a>
         </nav>
       </aside>
@@ -84,6 +94,7 @@ export class LayoutComponent {
   LayoutDashboard = LayoutDashboard;
   Users = Users;
   FlaskConical = FlaskConical;
+  ListChecks = ListChecks;
   Menu = Menu;
   X = X;
 }
