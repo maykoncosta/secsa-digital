@@ -1,11 +1,11 @@
 import { Component, input, output, signal, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { ButtonComponent } from '../../shared/components/button.component';
+import { ButtonComponent } from '../../../../shared/components/button.component';
 import { LucideAngularModule, X } from 'lucide-angular';
-import { Paciente } from '../../data/interfaces/paciente.interface';
-import { PacienteRepository } from '../../data/repositories/paciente.repository';
-import { ToastService } from '../../core/services/toast.service';
+import { Paciente } from '../../../../data/interfaces/paciente.interface';
+import { PacienteRepository } from '../../../../data/repositories/paciente.repository';
+import { ToastService } from '../../../../core/services/toast.service';
 import { Timestamp } from '@angular/fire/firestore';
 
 @Component({

@@ -1,11 +1,11 @@
 import { Component, input, output, signal, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormArray } from '@angular/forms';
-import { ButtonComponent } from '../../shared/components/button.component';
+import { ButtonComponent } from '../../../../shared/components/button.component';
 import { LucideAngularModule, X, Plus, Trash2, Calculator } from 'lucide-angular';
-import { SchemaExame, ParametroExame } from '../../data/interfaces/exame.interface';
-import { SchemaExameRepository } from '../../data/repositories/schema-exame.repository';
-import { ToastService } from '../../core/services/toast.service';
+import { SchemaExame, ParametroExame } from '../../../../data/interfaces/exame.interface';
+import { SchemaExameRepository } from '../../../../data/repositories/schema-exame.repository';
+import { ToastService } from '../../../../core/services/toast.service';
 
 @Component({
   selector: 'app-schema-exame-form-modal',

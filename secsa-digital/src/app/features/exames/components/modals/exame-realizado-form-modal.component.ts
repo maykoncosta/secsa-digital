@@ -1,13 +1,13 @@
 import { Component, signal, inject, output, input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule, Validators } from '@angular/forms';
-import { ButtonComponent } from '../../shared/components/button.component';
+import { ButtonComponent } from '../../../../shared/components/button.component';
 import { LucideAngularModule, X, Search, Calendar } from 'lucide-angular';
-import { ExameRealizado } from '../../data/interfaces/exame.interface';
-import { ExameRealizadoRepository } from '../../data/repositories/exame-realizado.repository';
-import { SchemaExameRepository } from '../../data/repositories/schema-exame.repository';
-import { PacienteRepository } from '../../data/repositories/paciente.repository';
-import { ToastService } from '../../core/services/toast.service';
+import { ExameRealizado } from '../../../../data/interfaces/exame.interface';
+import { ExameRealizadoRepository } from '../../../../data/repositories/exame-realizado.repository';
+import { SchemaExameRepository } from '../../../../data/repositories/schema-exame.repository';
+import { PacienteRepository } from '../../../../data/repositories/paciente.repository';
+import { ToastService } from '../../../../core/services/toast.service';
 import { Timestamp } from '@angular/fire/firestore';
 
 @Component({

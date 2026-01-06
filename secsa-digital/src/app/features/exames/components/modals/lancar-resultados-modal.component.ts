@@ -1,13 +1,13 @@
 import { Component, signal, inject, output, input, OnInit, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ButtonComponent } from '../../shared/components/button.component';
+import { ButtonComponent } from '../../../../shared/components/button.component';
 import { LucideAngularModule, X, AlertTriangle, CheckCircle, Calculator } from 'lucide-angular';
-import { ExameRealizado, SchemaExame, ParametroExame, FaixaReferencia } from '../../data/interfaces/exame.interface';
-import { ExameRealizadoRepository } from '../../data/repositories/exame-realizado.repository';
-import { SchemaExameRepository } from '../../data/repositories/schema-exame.repository';
-import { ToastService } from '../../core/services/toast.service';
-import { FaixaReferenciaService } from '../../core/services/faixa-referencia.service';
+import { ExameRealizado, SchemaExame, ParametroExame, FaixaReferencia } from '../../../../data/interfaces/exame.interface';
+import { ExameRealizadoRepository } from '../../../../data/repositories/exame-realizado.repository';
+import { SchemaExameRepository } from '../../../../data/repositories/schema-exame.repository';
+import { ToastService } from '../../../../core/services/toast.service';
+import { FaixaReferenciaService } from '../../../../core/services/faixa-referencia.service';
 import { Timestamp } from '@angular/fire/firestore';
 
 interface ParametroComStatus extends ParametroExame {

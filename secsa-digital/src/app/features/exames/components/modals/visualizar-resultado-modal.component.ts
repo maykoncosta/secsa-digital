@@ -1,12 +1,12 @@
 import { Component, signal, inject, output, input, OnInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ButtonComponent } from '../../shared/components/button.component';
+import { ButtonComponent } from '../../../../shared/components/button.component';
 import { LucideAngularModule, X, User, Calendar, FileText, Printer } from 'lucide-angular';
-import { ExameRealizado, SchemaExame, FaixaReferencia } from '../../data/interfaces/exame.interface';
-import { SchemaExameRepository } from '../../data/repositories/schema-exame.repository';
-import { ToastService } from '../../core/services/toast.service';
-import { PdfLaudoService } from '../../core/services/pdf-laudo.service';
-import { FaixaReferenciaService } from '../../core/services/faixa-referencia.service';
+import { ExameRealizado, SchemaExame, FaixaReferencia } from '../../../../data/interfaces/exame.interface';
+import { SchemaExameRepository } from '../../../../data/repositories/schema-exame.repository';
+import { ToastService } from '../../../../core/services/toast.service';
+import { PdfLaudoService } from '../../../../core/services/pdf-laudo.service';
+import { FaixaReferenciaService } from '../../../../core/services/faixa-referencia.service';
 
 @Component({
   selector: 'app-visualizar-resultado-modal',

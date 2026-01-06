@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { PacienteFormModalComponent } from './paciente-form-modal.component';
-import { PacienteRepository } from '../../data/repositories/paciente.repository';
-import { ToastService } from '../../core/services/toast.service';
+import { PacienteRepository } from '../../../../data/repositories/paciente.repository';
+import { ToastService } from '../../../../core/services/toast.service';
 import { Timestamp } from '@angular/fire/firestore';
 import { vi } from 'vitest';
 

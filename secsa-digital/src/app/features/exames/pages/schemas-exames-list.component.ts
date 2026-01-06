@@ -1,14 +1,14 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { LayoutComponent } from '../../shared/components/layout.component';
-import { ButtonComponent } from '../../shared/components/button.component';
+import { LayoutComponent } from '../../../shared/components/layout.component';
+import { ButtonComponent } from '../../../shared/components/button.component';
 import { LucideAngularModule, Search, Plus, Edit, Power, PowerOff, Trash2 } from 'lucide-angular';
-import { SchemaExameRepository } from '../../data/repositories/schema-exame.repository';
-import { SchemaExame } from '../../data/interfaces/exame.interface';
-import { ToastService } from '../../core/services/toast.service';
-import { SchemaExameFormModalComponent } from './schema-exame-form-modal.component';
-import { SchemaExameEditModalComponent } from './schema-exame-edit-modal.component';
+import { SchemaExameRepository } from '../../../data/repositories/schema-exame.repository';
+import { SchemaExame } from '../../../data/interfaces/exame.interface';
+import { ToastService } from '../../../core/services/toast.service';
+import { SchemaExameFormModalComponent } from '../components/modals/schema-exame-form-modal.component';
+import { SchemaExameEditModalComponent } from '../components/modals/schema-exame-edit-modal.component';
 
 @Component({
   selector: 'app-schemas-exames-list',

@@ -1,16 +1,16 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { LayoutComponent } from '../../shared/components/layout.component';
-import { ButtonComponent } from '../../shared/components/button.component';
+import { LayoutComponent } from '../../../shared/components/layout.component';
+import { ButtonComponent } from '../../../shared/components/button.component';
 import { LucideAngularModule, Search, UserPlus, Edit, Trash2, Power } from 'lucide-angular';
-import { PacienteRepository } from '../../data/repositories/paciente.repository';
-import { Paciente } from '../../data/interfaces/paciente.interface';
-import { CpfPipe } from '../../shared/pipes/cpf.pipe';
-import { CnsPipe } from '../../shared/pipes/cns.pipe';
-import { TelefonePipe } from '../../shared/pipes/telefone.pipe';
-import { ToastService } from '../../core/services/toast.service';
-import { PacienteFormModalComponent } from './paciente-form-modal.component';
+import { PacienteRepository } from '../../../data/repositories/paciente.repository';
+import { Paciente } from '../../../data/interfaces/paciente.interface';
+import { CpfPipe } from '../../../shared/pipes/cpf.pipe';
+import { CnsPipe } from '../../../shared/pipes/cns.pipe';
+import { TelefonePipe } from '../../../shared/pipes/telefone.pipe';
+import { ToastService } from '../../../core/services/toast.service';
+import { PacienteFormModalComponent } from '../components/modals/paciente-form-modal.component';
 
 @Component({
   selector: 'app-pacientes-list',

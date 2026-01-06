@@ -1,11 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { PacientesListComponent } from './pacientes-list.component';
-import { PacienteRepository } from '../../data/repositories/paciente.repository';
-import { ToastService } from '../../core/services/toast.service';
+import { PacienteRepository } from '../../../data/repositories/paciente.repository';
+import { ToastService } from '../../../core/services/toast.service';
 import { ActivatedRoute } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { Timestamp } from '@angular/fire/firestore';
-import { Paciente } from '../../data/interfaces/paciente.interface';
+import { Paciente } from '../../../data/interfaces/paciente.interface';
 import { vi } from 'vitest';
 
 describe('PacientesListComponent', () => {

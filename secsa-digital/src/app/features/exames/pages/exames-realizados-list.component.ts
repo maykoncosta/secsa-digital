@@ -1,17 +1,17 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { LayoutComponent } from '../../shared/components/layout.component';
-import { ButtonComponent } from '../../shared/components/button.component';
+import { LayoutComponent } from '../../../shared/components/layout.component';
+import { ButtonComponent } from '../../../shared/components/button.component';
 import { LucideAngularModule, Search, Plus, Eye, Edit, CheckCircle, XCircle, Printer, FileText } from 'lucide-angular';
-import { ExameRealizadoRepository } from '../../data/repositories/exame-realizado.repository';
-import { ExameRealizado } from '../../data/interfaces/exame.interface';
-import { ToastService } from '../../core/services/toast.service';
-import { ExameRealizadoFormModalComponent } from './exame-realizado-form-modal.component';
-import { LancarResultadosModalComponent } from './lancar-resultados-modal.component';
-import { VisualizarResultadoModalComponent } from './visualizar-resultado-modal.component';
-import { SchemaExameRepository } from '../../data/repositories/schema-exame.repository';
-import { PdfLaudoService } from '../../core/services/pdf-laudo.service';
+import { ExameRealizadoRepository } from '../../../data/repositories/exame-realizado.repository';
+import { ExameRealizado } from '../../../data/interfaces/exame.interface';
+import { ToastService } from '../../../core/services/toast.service';
+import { ExameRealizadoFormModalComponent } from '../components/modals/exame-realizado-form-modal.component';
+import { LancarResultadosModalComponent } from '../components/modals/lancar-resultados-modal.component';
+import { VisualizarResultadoModalComponent } from '../components/modals/visualizar-resultado-modal.component';
+import { SchemaExameRepository } from '../../../data/repositories/schema-exame.repository';
+import { PdfLaudoService } from '../../../core/services/pdf-laudo.service';
 
 @Component({
   selector: 'app-exames-realizados-list',

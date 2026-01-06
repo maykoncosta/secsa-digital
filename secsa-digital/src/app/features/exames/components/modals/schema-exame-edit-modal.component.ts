@@ -1,11 +1,11 @@
 import { Component, signal, inject, output, input, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ButtonComponent } from '../../shared/components/button.component';
+import { ButtonComponent } from '../../../../shared/components/button.component';
 import { LucideAngularModule, X, Plus, Trash2, Save, Edit2 } from 'lucide-angular';
-import { SchemaExame, ParametroExame, FaixaReferencia, CondicaoReferencia } from '../../data/interfaces/exame.interface';
-import { SchemaExameRepository } from '../../data/repositories/schema-exame.repository';
-import { ToastService } from '../../core/services/toast.service';
+import { SchemaExame, ParametroExame, FaixaReferencia, CondicaoReferencia } from '../../../../data/interfaces/exame.interface';
+import { SchemaExameRepository } from '../../../../data/repositories/schema-exame.repository';
+import { ToastService } from '../../../../core/services/toast.service';
 import { Timestamp } from '@angular/fire/firestore';
 
 @Component({
