@@ -1,8 +1,9 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LayoutComponent } from '../../../shared/components/layout.component';
 import { ButtonComponent } from '../../../shared/components/button.component';
+import { PaginationComponent, PaginationConfig } from '../../../shared/components/pagination.component';
 import { LucideAngularModule, Search, Plus, Edit, Power, PowerOff, Trash2 } from 'lucide-angular';
 import { SchemaExameRepository } from '../../../data/repositories/schema-exame.repository';
 import { SchemaExame } from '../../../data/interfaces/exame.interface';
@@ -18,6 +19,7 @@ import { SchemaExameEditModalComponent } from '../components/modals/schema-exame
     FormsModule,
     LayoutComponent,
     ButtonComponent,
+    PaginationComponent,
     LucideAngularModule,
     SchemaExameFormModalComponent,
     SchemaExameEditModalComponent
@@ -185,6 +187,17 @@ import { SchemaExameEditModalComponent } from '../components/modals/schema-exame
             </div>
           }
         </div>
+        
+        <!-- Pagination -->
+        @if (!loading() && filteredSchemas().length > 0) {
+          <div class="mt-6">
+            <app-pagination
+              [config]="paginationConfig()"
+              (pageChange)="onPageChange($event)"
+              (pageSizeChange)="onPageSizeChange($event)"
+            />
+          </div>
+        }
       </div>
     </app-layout>
 
@@ -214,7 +227,8 @@ export class SchemasExamesListComponent implements OnInit {
   Power = Power;
   PowerOff = PowerOff;
   Trash2 = Trash2;
-showModal = signal(false);
+
+  showModal = signal(false);
   selectedSchema = signal<SchemaExame | null>(null);
   showEditModal = signal(false);
   schemaToEdit = signal<SchemaExame | null>(null);
@@ -232,52 +246,65 @@ showModal = signal(false);
   searchTerm = '';
   categoriaFilter = '';
   statusFilter = '';
+  
+  // Pagination
+  currentPage = signal(1);
+  pageSize = signal(10);
+  totalItems = signal(0);
+  
+  paginationConfig = computed<PaginationConfig>(() => ({
+    currentPage: this.currentPage(),
+    pageSize: this.pageSize(),
+    totalItems: this.totalItems()
+  }));
 
   ngOnInit() {
     this.loadSchemas();
   }
 
-  loadSchemas() {
+  async loadSchemas() {
     this.loading.set(true);
-    this.schemaRepository.getAll().subscribe({
-      next: (schemas) => {
-        this.schemas.set(schemas);
-        this.filteredSchemas.set(schemas);
-        this.loading.set(false);
-      },
-      error: (error) => {
-        console.error('Erro ao carregar schemas:', error);
-        this.toastService.showError('Erro ao carregar schemas de exames');
-        this.loading.set(false);
+    try {
+      const result = await this.schemaRepository.getPaginated(
+        this.currentPage(),
+        this.pageSize(),
+        this.searchTerm,
+        this.categoriaFilter || undefined
+      );
+      
+      // Aplicar filtro de status após paginação
+      let filtered = result.items;
+      if (this.statusFilter === 'ativo') {
+        filtered = filtered.filter(schema => schema.ativo === true);
+      } else if (this.statusFilter === 'inativo') {
+        filtered = filtered.filter(schema => schema.ativo === false);
       }
-    });
+      
+      this.filteredSchemas.set(filtered);
+      this.totalItems.set(result.total);
+      this.loading.set(false);
+    } catch (error) {
+      console.error('Erro ao carregar schemas:', error);
+      this.toastService.showError('Erro ao carregar schemas de exames');
+      this.loading.set(false);
+    }
   }
 
   onSearch() {
-    let filtered = this.schemas();
-
-    // Filtro por texto
-    if (this.searchTerm.trim()) {
-      const term = this.searchTerm.toLowerCase();
-      filtered = filtered.filter(schema =>
-        schema.nome.toLowerCase().includes(term) ||
-        schema.categoria.toLowerCase().includes(term)
-      );
-    }
-
-    // Filtro por categoria
-    if (this.categoriaFilter) {
-      filtered = filtered.filter(schema => schema.categoria === this.categoriaFilter);
-    }
-
-    // Filtro por status
-    if (this.statusFilter === 'ativo') {
-      filtered = filtered.filter(schema => schema.ativo === true);
-    } else if (this.statusFilter === 'inativo') {
-      filtered = filtered.filter(schema => schema.ativo === false);
-    }
-
-    this.filteredSchemas.set(filtered);
+    // Reset para primeira página ao fazer busca
+    this.currentPage.set(1);
+    this.loadSchemas();
+  }
+  
+  onPageChange(page: number) {
+    this.currentPage.set(page);
+    this.loadSchemas();
+  }
+  
+  onPageSizeChange(pageSize: number) {
+    this.pageSize.set(pageSize);
+    this.currentPage.set(1); // Volta pra primeira página ao mudar tamanho
+    this.loadSchemas();
   }
 
   openNewSchemaModal() {
@@ -316,6 +343,7 @@ showModal = signal(false);
     try {
       await this.schemaRepository.inactivate(schema.id);
       this.toastService.showSuccess('Schema inativado com sucesso');
+      this.loadSchemas();
     } catch (error) {
       console.error('Erro ao inativar schema:', error);
       this.toastService.showError('Erro ao inativar schema');
@@ -326,6 +354,7 @@ showModal = signal(false);
     try {
       await this.schemaRepository.activate(schema.id);
       this.toastService.showSuccess('Schema ativado com sucesso');
+      this.loadSchemas();
     } catch (error) {
       console.error('Erro ao ativar schema:', error);
       this.toastService.showError('Erro ao ativar schema');
@@ -340,6 +369,7 @@ showModal = signal(false);
     try {
       await this.schemaRepository.delete(schema.id);
       this.toastService.showSuccess('Schema excluído com sucesso');
+      this.loadSchemas();
     } catch (error) {
       console.error('Erro ao excluir schema:', error);
       this.toastService.showError('Erro ao excluir schema. Pode haver exames vinculados a ele.');

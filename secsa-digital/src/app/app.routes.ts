@@ -8,19 +8,15 @@ export const routes: Routes = [
   },
   {
     path: 'pacientes',
-    loadComponent: () => import('./features/pacientes/pages/pacientes-list.component').then(m => m.PacientesListComponent)
+    loadChildren: () => import('./features/pacientes/pacientes.routes').then(m => m.PACIENTES_ROUTES)
   },
   {
     path: 'dashboard',
-    loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent)
+    loadChildren: () => import('./features/dashboard/dashboard.routes').then(m => m.DASHBOARD_ROUTES)
   },
   {
-    path: 'exames/schemas',
-    loadComponent: () => import('./features/exames/pages/schemas-exames-list.component').then(m => m.SchemasExamesListComponent)
-  },
-  {
-    path: 'exames/realizados',
-    loadComponent: () => import('./features/exames/pages/exames-realizados-list.component').then(m => m.ExamesRealizadosListComponent)
+    path: 'exames',
+    loadChildren: () => import('./features/exames/exames.routes').then(m => m.EXAMES_ROUTES)
   }
 ];
 

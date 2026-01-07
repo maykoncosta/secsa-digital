@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LayoutComponent } from '../../../shared/components/layout.component';
 import { ButtonComponent } from '../../../shared/components/button.component';
+import { PaginationComponent, PaginationConfig } from '../../../shared/components/pagination.component';
 import { LucideAngularModule, Search, UserPlus, Edit, Trash2, Power } from 'lucide-angular';
 import { PacienteRepository } from '../../../data/repositories/paciente.repository';
 import { Paciente } from '../../../data/interfaces/paciente.interface';
@@ -20,6 +21,7 @@ import { PacienteFormModalComponent } from '../components/modals/paciente-form-m
     FormsModule,
     LayoutComponent,
     ButtonComponent,
+    PaginationComponent,
     LucideAngularModule,
     CpfPipe,
     CnsPipe,
@@ -62,7 +64,7 @@ import { PacienteFormModalComponent } from '../components/modals/paciente-form-m
               <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
               <p class="mt-4 text-slate-600">Carregando pacientes...</p>
             </div>
-          } @else if (filteredPacientes().length === 0) {
+          } @else if (pacientes().length === 0) {
             <div class="p-12 text-center">
               <p class="text-slate-600">Nenhum paciente encontrado.</p>
               <p class="text-sm text-slate-500 mt-2">Clique em "Novo Paciente" para adicionar.</p>
@@ -81,7 +83,7 @@ import { PacienteFormModalComponent } from '../components/modals/paciente-form-m
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-200">
-                @for (paciente of filteredPacientes(); track paciente.id) {
+                @for (paciente of pacientes(); track paciente.id) {
                   <tr class="hover:bg-slate-50 transition-colors">
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">
                       {{ paciente.numeroProntuario }}
@@ -127,6 +129,13 @@ import { PacienteFormModalComponent } from '../components/modals/paciente-form-m
                 }
               </tbody>
             </table>
+
+            <!-- Paginação -->
+            <app-pagination
+              [config]="paginationConfig()"
+              (pageChange)="onPageChange($event)"
+              (pageSizeChange)="onPageSizeChange($event)"
+            />
           }
         </div>
       </div>
@@ -154,9 +163,19 @@ export class PacientesListComponent implements OnInit {
   Power = Power;
   
   pacientes = signal<Paciente[]>([]);
-  filteredPacientes = signal<Paciente[]>([]);
   loading = signal(true);
   searchTerm = '';
+  
+  // Paginação
+  currentPage = signal(1);
+  pageSize = signal(10);
+  totalItems = signal(0);
+  
+  paginationConfig = signal<PaginationConfig>({
+    currentPage: 1,
+    pageSize: 10,
+    totalItems: 0
+  });
   
   showModal = signal(false);
   selectedPaciente = signal<Paciente | null>(null);
@@ -165,38 +184,44 @@ export class PacientesListComponent implements OnInit {
     this.loadPacientes();
   }
 
-  loadPacientes(): void {
+  async loadPacientes(): Promise<void> {
     this.loading.set(true);
-    this.pacienteRepo.getAll().subscribe({
-      next: (pacientes) => {
-        this.pacientes.set(pacientes);
-        this.filteredPacientes.set(pacientes);
-        this.loading.set(false);
-      },
-      error: (error) => {
-        console.error('Erro ao carregar pacientes:', error);
-        this.toastService.error('Erro ao carregar pacientes');
-        this.loading.set(false);
-      }
-    });
+    try {
+      const result = await this.pacienteRepo.getPaginated(
+        this.currentPage(),
+        this.pageSize(),
+        this.searchTerm
+      );
+      
+      this.pacientes.set(result.items);
+      this.totalItems.set(result.total);
+      this.paginationConfig.set({
+        currentPage: result.page,
+        pageSize: result.pageSize,
+        totalItems: result.total
+      });
+    } catch (error) {
+      console.error('Erro ao carregar pacientes:', error);
+      this.toastService.error('Erro ao carregar pacientes');
+    } finally {
+      this.loading.set(false);
+    }
   }
 
   onSearch(): void {
-    const term = this.searchTerm.toLowerCase().trim();
-    
-    if (!term) {
-      this.filteredPacientes.set(this.pacientes());
-      return;
-    }
-    
-    const filtered = this.pacientes().filter(p => 
-      p.nomeCompleto.toLowerCase().includes(term) ||
-      p.cpf?.includes(term) ||
-      p.cns?.includes(term) ||
-      p.numeroProntuario.toLowerCase().includes(term)
-    );
-    
-    this.filteredPacientes.set(filtered);
+    this.currentPage.set(1); // Reset para primeira página ao buscar
+    this.loadPacientes();
+  }
+
+  onPageChange(page: number): void {
+    this.currentPage.set(page);
+    this.loadPacientes();
+  }
+
+  onPageSizeChange(pageSize: number): void {
+    this.pageSize.set(pageSize);
+    this.currentPage.set(1); // Reset para primeira página ao mudar tamanho
+    this.loadPacientes();
   }
 
   openNewPacienteModal(): void {

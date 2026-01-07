@@ -1,16 +1,19 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LayoutComponent } from '../../../shared/components/layout.component';
 import { ButtonComponent } from '../../../shared/components/button.component';
-import { LucideAngularModule, Search, Plus, Eye, Edit, CheckCircle, XCircle, Printer, FileText } from 'lucide-angular';
+import { PaginationComponent, PaginationConfig } from '../../../shared/components/pagination.component';
+import { LucideAngularModule, Search, Plus, Eye, Edit, CheckCircle, XCircle, Printer, FileText, Calendar, User, X } from 'lucide-angular';
 import { ExameRealizadoRepository } from '../../../data/repositories/exame-realizado.repository';
-import { ExameRealizado } from '../../../data/interfaces/exame.interface';
+import { ExameRealizado, SchemaExame } from '../../../data/interfaces/exame.interface';
 import { ToastService } from '../../../core/services/toast.service';
 import { ExameRealizadoFormModalComponent } from '../components/modals/exame-realizado-form-modal.component';
 import { LancarResultadosModalComponent } from '../components/modals/lancar-resultados-modal.component';
 import { VisualizarResultadoModalComponent } from '../components/modals/visualizar-resultado-modal.component';
 import { SchemaExameRepository } from '../../../data/repositories/schema-exame.repository';
+import { PacienteRepository } from '../../../data/repositories/paciente.repository';
+import { Paciente } from '../../../data/interfaces/paciente.interface';
 import { PdfLaudoService } from '../../../core/services/pdf-laudo.service';
 
 @Component({
@@ -21,6 +24,7 @@ import { PdfLaudoService } from '../../../core/services/pdf-laudo.service';
     FormsModule,
     LayoutComponent,
     ButtonComponent,
+    PaginationComponent,
     LucideAngularModule,
     ExameRealizadoFormModalComponent,
     LancarResultadosModalComponent,
@@ -33,29 +37,47 @@ import { PdfLaudoService } from '../../../core/services/pdf-laudo.service';
       <div class="space-y-6">
         <!-- Filtros e Ações -->
         <div class="bg-white rounded-lg shadow-sm p-6">
-          <div class="flex items-center justify-between gap-4 flex-wrap">
-            <div class="flex-1 max-w-md relative">
-              <lucide-icon [img]="Search" class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                placeholder="Buscar por paciente ou exame..."
-                [(ngModel)]="searchTerm"
-                (ngModelChange)="onSearch()"
-                class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-              />
-            </div>
-            
-            <div class="flex items-center gap-3">
-              <select
-                [(ngModel)]="statusFilter"
-                (ngModelChange)="onSearch()"
-                class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-              >
-                <option value="">Todos os Status</option>
-                <option value="pendente">Pendente</option>
-                <option value="finalizado">Finalizado</option>
-                <option value="liberado">Liberado</option>
-              </select>
+          <div class="space-y-4">
+            <!-- Primeira linha: Busca e Ações -->
+            <div class="flex items-center justify-between gap-4 flex-wrap">
+              <div class="flex-1 flex items-center gap-3">
+                <!-- Autocomplete de Paciente -->
+                <div class="flex-1 max-w-md relative">
+                  <lucide-icon [img]="User" class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Buscar paciente..."
+                    [(ngModel)]="pacienteSearchTerm"
+                    (input)="onPacienteSearch()"
+                    (focus)="showPacienteSuggestions = true"
+                    class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  />
+                  @if (selectedPaciente()) {
+                    <button
+                      (click)="clearPacienteFilter()"
+                      class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                      title="Limpar filtro"
+                    >
+                      <lucide-icon [img]="X" class="w-4 h-4" />
+                    </button>
+                  }
+                  
+                  <!-- Suggestions dropdown -->
+                  @if (showPacienteSuggestions && pacienteSuggestions().length > 0 && !selectedPaciente()) {
+                    <div class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-auto">
+                      @for (paciente of pacienteSuggestions().slice(0, 10); track paciente.id) {
+                        <button
+                          (click)="selectPaciente(paciente)"
+                          class="w-full px-4 py-2 text-left hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-b-0"
+                        >
+                          <div class="font-medium text-slate-900">{{ paciente.nomeCompleto }}</div>
+                          <div class="text-xs text-slate-500">CPF: {{ paciente.cpf }} | CNS: {{ paciente.cns }}</div>
+                        </button>
+                      }
+                    </div>
+                  }
+                </div>
+              </div>
               
               <app-button
                 variant="primary"
@@ -64,6 +86,76 @@ import { PdfLaudoService } from '../../../core/services/pdf-laudo.service';
                 <lucide-icon [img]="Plus" class="w-4 h-4 mr-2" />
                 Novo Exame
               </app-button>
+            </div>
+            
+            <!-- Segunda linha: Filtros detalhados -->
+            <div class="flex items-center gap-3 flex-wrap">
+              <!-- Select de Tipo de Exame -->
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-medium text-slate-600">Tipo de Exame</label>
+                <select
+                  [(ngModel)]="schemaFilter"
+                  (ngModelChange)="onFilterChange()"
+                  class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                >
+                  <option value="">Todos os Exames</option>
+                  @for (schema of schemasAtivos(); track schema.id) {
+                    <option [value]="schema.id">{{ schema.nome }}</option>
+                  }
+                </select>
+              </div>
+              
+              <!-- Select de Status -->
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-medium text-slate-600">Status</label>
+                <select
+                  [(ngModel)]="statusFilter"
+                  (ngModelChange)="onFilterChange()"
+                  class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                >
+                  <option value="">Todos os Status</option>
+                  <option value="pendente">Pendente</option>
+                  <option value="finalizado">Finalizado</option>
+                  <option value="liberado">Liberado</option>
+                </select>
+              </div>
+              
+              <!-- Data Coleta Início -->
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-medium text-slate-600">Data Coleta - Início</label>
+                <div class="relative">
+                  <lucide-icon [img]="Calendar" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  <input
+                    type="date"
+                    [(ngModel)]="dataColetaInicio"
+                    (ngModelChange)="onFilterChange()"
+                    class="pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  />
+                </div>
+              </div>
+              
+              <!-- Data Coleta Fim -->
+              <div class="flex flex-col gap-1">
+                <label class="text-xs font-medium text-slate-600">Data Coleta - Fim</label>
+                <div class="relative">
+                  <lucide-icon [img]="Calendar" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                  <input
+                    type="date"
+                    [(ngModel)]="dataColetaFim"
+                    (ngModelChange)="onFilterChange()"
+                    class="pl-9 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                  />
+                </div>
+              </div>
+              
+              @if (hasActiveFilters()) {
+                <button
+                  (click)="clearAllFilters()"
+                  class="px-4 py-2 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+                >
+                  Limpar filtros
+                </button>
+              }
             </div>
           </div>
         </div>
@@ -169,6 +261,17 @@ import { PdfLaudoService } from '../../../core/services/pdf-laudo.service';
             </table>
           }
         </div>
+        
+        <!-- Pagination -->
+        @if (!loading() && filteredExames().length > 0) {
+          <div class="mt-6">
+            <app-pagination
+              [config]="paginationConfig()"
+              (pageChange)="onPageChange($event)"
+              (pageSizeChange)="onPageSizeChange($event)"
+            />
+          </div>
+        }
       </div>
       
       <!-- Modal de Cadastro -->
@@ -206,67 +309,183 @@ export class ExamesRealizadosListComponent implements OnInit {
   XCircle = XCircle;
   Printer = Printer;
   FileText = FileText;
+  Calendar = Calendar;
+  User = User;
+  X = X;
 
   // Services
   private exameRepository = inject(ExameRealizadoRepository);
   private schemaRepository = inject(SchemaExameRepository);
+  private pacienteRepository = inject(PacienteRepository);
   private pdfService = inject(PdfLaudoService);
+  private toastService = inject(ToastService);
+
+  // Modals
   showResultadosModal = signal(false);
   exameParaResultados = signal<ExameRealizado | null>(null);
   showVisualizarModal = signal(false);
   exameParaVisualizar = signal<ExameRealizado | null>(null);
-  private toastService = inject(ToastService);
+  showModal = signal(false);
+  selectedExame = signal<ExameRealizado | null>(null);
 
   // State
   exames = signal<ExameRealizado[]>([]);
   filteredExames = signal<ExameRealizado[]>([]);
   loading = signal(true);
-  showModal = signal(false);
-  selectedExame = signal<ExameRealizado | null>(null);
+  
+  // Autocomplete de Paciente
+  pacienteSearchTerm = '';
+  pacienteSuggestions = signal<Paciente[]>([]);
+  selectedPaciente = signal<Paciente | null>(null);
+  showPacienteSuggestions = false;
+  
+  // Schemas ativos para o select
+  schemasAtivos = signal<SchemaExame[]>([]);
   
   // Filters
-  searchTerm = '';
+  schemaFilter = '';
   statusFilter = '';
+  dataColetaInicio = '';
+  dataColetaFim = '';
+  
+  // Pagination
+  currentPage = signal(1);
+  pageSize = signal(10);
+  totalItems = signal(0);
+  lastDoc: any = null;
+  firstDoc: any = null;
+  
+  paginationConfig = computed<PaginationConfig>(() => ({
+    currentPage: this.currentPage(),
+    pageSize: this.pageSize(),
+    totalItems: this.totalItems()
+  }));
 
   ngOnInit() {
+    this.loadSchemasAtivos();
     this.loadExames();
   }
-
-  loadExames() {
-    this.loading.set(true);
-    this.exameRepository.getAll().subscribe({
-      next: (exames) => {
-        this.exames.set(exames);
-        this.filteredExames.set(exames);
-        this.loading.set(false);
-      },
-      error: (error) => {
-        console.error('Erro ao carregar exames:', error);
-        this.toastService.show('Erro ao carregar exames realizados', 'error');
-        this.loading.set(false);
-      }
-    });
+  
+  async loadSchemasAtivos() {
+    try {
+      const result = await this.schemaRepository.getPaginated(1, 1000);
+      this.schemasAtivos.set(result.items.filter(s => s.ativo));
+    } catch (error) {
+      console.error('Erro ao carregar schemas:', error);
+    }
   }
 
-  onSearch() {
-    let filtered = this.exames();
+  async loadExames() {
+    this.loading.set(true);
+    try {
+      const filters: {
+        pacienteId?: string;
+        schemaId?: string;
+        status?: 'pendente' | 'finalizado' | 'liberado';
+        dataColetaInicio?: Date;
+        dataColetaFim?: Date;
+      } = {};
+      
+      if (this.selectedPaciente()) {
+        filters.pacienteId = this.selectedPaciente()!.id;
+      }
+      if (this.schemaFilter) {
+        filters.schemaId = this.schemaFilter;
+      }
+      if (this.statusFilter) {
+        filters.status = this.statusFilter as 'pendente' | 'finalizado' | 'liberado';
+      }
+      if (this.dataColetaInicio) {
+        filters.dataColetaInicio = new Date(this.dataColetaInicio);
+      }
+      if (this.dataColetaFim) {
+        filters.dataColetaFim = new Date(this.dataColetaFim);
+      }
 
-    // Filtro por texto
-    if (this.searchTerm.trim()) {
-      const term = this.searchTerm.toLowerCase();
-      filtered = filtered.filter(exame =>
-        exame.paciente.nome.toLowerCase().includes(term) ||
-        exame.schemaNome.toLowerCase().includes(term) ||
-        exame.paciente.cpf.includes(term)
+      console.log('🔍 Filtros aplicados:', filters);
+
+      const result = await this.exameRepository.getPaginated(
+        this.currentPage(),
+        this.pageSize(),
+        filters,
+        this.lastDoc,
+        this.firstDoc
       );
+      
+      this.filteredExames.set(result.items);
+      this.totalItems.set(result.total);
+      this.lastDoc = result.lastDoc;
+      this.firstDoc = result.firstDoc;
+      this.loading.set(false);
+    } catch (error) {
+      console.error('Erro ao carregar exames:', error);
+      this.toastService.show('Erro ao carregar exames realizados', 'error');
+      this.loading.set(false);
+    }
+  }
+  
+  async onPacienteSearch() {
+    if (!this.pacienteSearchTerm.trim()) {
+      this.pacienteSuggestions.set([]);
+      return;
     }
 
-    // Filtro por status
-    if (this.statusFilter) {
-      filtered = filtered.filter(exame => exame.status === this.statusFilter);
+    try {
+      // Buscar pacientes do cache
+      const result = await this.pacienteRepository.getPaginated(1, 10, this.pacienteSearchTerm);
+      this.pacienteSuggestions.set(result.items);
+    } catch (error) {
+      console.error('Erro ao buscar pacientes:', error);
     }
-
-    this.filteredExames.set(filtered);
+  }
+  
+  selectPaciente(paciente: Paciente) {
+    this.selectedPaciente.set(paciente);
+    this.pacienteSearchTerm = paciente.nomeCompleto;
+    this.showPacienteSuggestions = false;
+    this.pacienteSuggestions.set([]);
+    this.currentPage.set(1);
+    this.loadExames();
+  }
+  
+  clearPacienteFilter() {
+    this.selectedPaciente.set(null);
+    this.pacienteSearchTerm = '';
+    this.pacienteSuggestions.set([]);
+    this.currentPage.set(1);
+    this.loadExames();
+  }
+  
+  onFilterChange() {
+    this.currentPage.set(1);
+    this.loadExames();
+  }
+  
+  hasActiveFilters(): boolean {
+    return !!(this.selectedPaciente() || this.schemaFilter || this.statusFilter || 
+              this.dataColetaInicio || this.dataColetaFim);
+  }
+  
+  clearAllFilters() {
+    this.selectedPaciente.set(null);
+    this.pacienteSearchTerm = '';
+    this.schemaFilter = '';
+    this.statusFilter = '';
+    this.dataColetaInicio = '';
+    this.dataColetaFim = '';
+    this.currentPage.set(1);
+    this.loadExames();
+  }
+  
+  onPageChange(page: number) {
+    this.currentPage.set(page);
+    this.loadExames();
+  }
+  
+  onPageSizeChange(pageSize: number) {
+    this.pageSize.set(pageSize);
+    this.currentPage.set(1);
+    this.loadExames();
   }
 
   formatDate(timestamp: any): string {
@@ -334,6 +553,7 @@ export class ExamesRealizadosListComponent implements OnInit {
     try {
       await this.exameRepository.updateStatus(exame.uid, 'liberado', 'current-user-id');
       this.toastService.show('Exame liberado com sucesso', 'success');
+      this.loadExames();
     } catch (error) {
       console.error('Erro ao liberar exame:', error);
       this.toastService.show('Erro ao liberar exame', 'error');

@@ -13,7 +13,8 @@ import {
   QueryConstraint,
   CollectionReference,
   DocumentReference,
-  DocumentData
+  DocumentData,
+  getDocs
 } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 
@@ -70,5 +71,34 @@ export class FirestoreService {
   async deleteDocument(collectionName: string, id: string): Promise<void> {
     const docRef = doc(this.firestore, collectionName, id);
     return await deleteDoc(docRef);
+  }
+
+  /**
+   * Obtém um snapshot da coleção (para paginação)
+   */
+  async getCollectionSnapshot<T extends DocumentData>(
+    collectionName: string,
+    ...queryConstraints: QueryConstraint[]
+  ): Promise<T[]> {
+    const collectionRef = collection(this.firestore, collectionName) as CollectionReference<T>;
+    const q = query(collectionRef, ...queryConstraints);
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as T));
+  }
+
+  /**
+   * Obtém snapshot com documentos raw (para cursor-based pagination)
+   */
+  async getCollectionSnapshotWithDocs<T extends DocumentData>(
+    collectionName: string,
+    ...queryConstraints: QueryConstraint[]
+  ) {
+    const collectionRef = collection(this.firestore, collectionName) as CollectionReference<T>;
+    const q = query(collectionRef, ...queryConstraints);
+    const snapshot = await getDocs(q);
+    return {
+      docs: snapshot.docs,
+      data: snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id } as T))
+    };
   }
 }

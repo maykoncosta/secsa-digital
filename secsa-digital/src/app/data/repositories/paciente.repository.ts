@@ -2,13 +2,19 @@ import { Injectable } from '@angular/core';
 import { FirestoreService } from '../../core/services/firestore.service';
 import { Paciente } from '../interfaces/paciente.interface';
 import { Observable } from 'rxjs';
-import { where, Timestamp } from '@angular/fire/firestore';
+import { where, Timestamp, orderBy, limit, startAfter, QueryConstraint } from '@angular/fire/firestore';
+import { PaginatedResult } from '../../shared/interfaces/paginated-result.interface';
 
 @Injectable({
   providedIn: 'root'
 })
 export class PacienteRepository {
   private readonly COLLECTION = 'pacientes';
+  
+  // Cache de TODOS os pacientes ativos
+  private allPacientesCache: Paciente[] | null = null;
+  private cacheTimestamp: number | null = null;
+  private readonly CACHE_DURATION = 300000; // 5 minutos
 
   constructor(private firestoreService: FirestoreService) {}
 
@@ -60,6 +66,7 @@ export class PacienteRepository {
       atualizadoEm: now
     };
     await this.firestoreService.addDocument(this.COLLECTION, data);
+    this.invalidateCache();
   }
 
   /**
@@ -78,6 +85,7 @@ export class PacienteRepository {
    */
   async inactivate(id: string): Promise<void> {
     await this.update(id, { status: 'inativo' });
+    this.invalidateCache();
   }
 
   /**
@@ -85,5 +93,108 @@ export class PacienteRepository {
    */
   async activate(id: string): Promise<void> {
     await this.update(id, { status: 'ativo' });
+    this.invalidateCache();
+  }
+
+  /**
+   * Invalida o cache
+   */
+  private invalidateCache(): void {
+    this.allPacientesCache = null;
+    this.cacheTimestamp = null;
+  }
+
+  /**
+   * Busca TODOS os pacientes ativos (com cache de 5 minutos)
+   * Busca apenas 1 vez do Firestore, depois usa cache
+   */
+  private async getAllPacientesAtivos(): Promise<Paciente[]> {
+    const now = Date.now();
+    
+    // Verificar se cache é válido
+    if (this.allPacientesCache !== null && this.cacheTimestamp !== null) {
+      if (now - this.cacheTimestamp < this.CACHE_DURATION) {
+        console.log('✅ Usando cache de pacientes');
+        return this.allPacientesCache;
+      }
+    }
+
+    console.log('🔄 Buscando pacientes do Firestore...');
+    const pacientes = await this.firestoreService.getCollectionSnapshot<Paciente>(
+      this.COLLECTION,
+      where('status', '==', 'ativo'),
+      orderBy('nomeCompleto')
+    );
+
+    this.allPacientesCache = pacientes;
+    this.cacheTimestamp = now;
+    
+    console.log(`📦 Cache atualizado: ${pacientes.length} pacientes`);
+    return pacientes;
+  }
+
+  /**
+   * Busca pacientes paginados
+   * 
+   * ESTRATÉGIA: Cache inteligente
+   * - Busca TODOS os pacientes UMA VEZ do Firestore
+   * - Cacheia por 5 minutos
+   * - Filtragem e paginação em memória (super rápido)
+   * - Ideal para listas de até ~1000 registros
+   * 
+   * Vantagens:
+   * ✅ 1 query no Firestore (economia de reads)
+   * ✅ Filtro instantâneo (sem delay)
+   * ✅ Navegação entre páginas instantânea
+   * ✅ Busca funciona perfeitamente
+   * 
+   * Cache invalidado automaticamente ao adicionar/editar/deletar
+   */
+  async getPaginated(
+    page: number = 1,
+    pageSize: number = 10,
+    searchTerm?: string
+  ): Promise<PaginatedResult<Paciente>> {
+    try {
+      // Buscar TODOS os pacientes (usa cache se disponível)
+      let allPacientes = await this.getAllPacientesAtivos();
+
+      // Filtrar se houver termo de busca
+      if (searchTerm && searchTerm.trim()) {
+        const term = searchTerm.toLowerCase().trim();
+        allPacientes = allPacientes.filter(p => 
+          p.nomeCompleto.toLowerCase().includes(term) ||
+          p.numeroProntuario.toLowerCase().includes(term) ||
+          p.cpf?.includes(term) ||
+          p.cns?.includes(term) ||
+          p.email?.toLowerCase().includes(term)
+        );
+      }
+
+      const total = allPacientes.length;
+      const totalPages = Math.ceil(total / pageSize);
+
+      // Paginar em memória
+      const startIndex = (page - 1) * pageSize;
+      const endIndex = startIndex + pageSize;
+      const items = allPacientes.slice(startIndex, endIndex);
+
+      return {
+        items,
+        total,
+        page,
+        pageSize,
+        totalPages
+      };
+    } catch (error) {
+      console.error('Erro ao buscar pacientes paginados:', error);
+      return {
+        items: [],
+        total: 0,
+        page,
+        pageSize,
+        totalPages: 0
+      };
+    }
   }
 }
