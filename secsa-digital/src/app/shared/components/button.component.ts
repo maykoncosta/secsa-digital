@@ -1,7 +1,7 @@
 import { Component, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline';
 
 @Component({
   selector: 'app-button',
@@ -42,7 +42,8 @@ export class ButtonComponent {
       primary: 'bg-primary text-white hover:bg-blue-700',
       secondary: 'border border-secondary text-secondary hover:bg-gray-50',
       ghost: 'text-secondary hover:bg-gray-100',
-      danger: 'bg-error text-white hover:bg-red-600'
+      danger: 'bg-error text-white hover:bg-red-600',
+      outline: 'border border-slate-300 text-slate-700 hover:bg-slate-50'
     };
 
     return `${baseClasses} ${variantClasses[this.variant()]} ${widthClass}`;

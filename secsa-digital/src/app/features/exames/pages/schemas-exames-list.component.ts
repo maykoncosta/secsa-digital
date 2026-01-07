@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { LayoutComponent } from '../../../shared/components/layout.component';
 import { ButtonComponent } from '../../../shared/components/button.component';
 import { PaginationComponent, PaginationConfig } from '../../../shared/components/pagination.component';
+import { TableSkeletonComponent } from '../../../shared/components/table-skeleton.component';
 import { LucideAngularModule, Search, Plus, Edit, Power, PowerOff, Trash2 } from 'lucide-angular';
 import { SchemaExameRepository } from '../../../data/repositories/schema-exame.repository';
 import { SchemaExame } from '../../../data/interfaces/exame.interface';
@@ -20,6 +21,7 @@ import { SchemaExameEditModalComponent } from '../components/modals/schema-exame
     LayoutComponent,
     ButtonComponent,
     PaginationComponent,
+    TableSkeletonComponent,
     LucideAngularModule,
     SchemaExameFormModalComponent,
     SchemaExameEditModalComponent
@@ -84,9 +86,8 @@ import { SchemaExameEditModalComponent } from '../components/modals/schema-exame
         <!-- Lista de Schemas -->
         <div class="bg-white rounded-lg shadow-sm overflow-hidden">
           @if (loading()) {
-            <div class="p-12 text-center">
-              <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-              <p class="mt-4 text-slate-600">Carregando schemas...</p>
+            <div class="p-6">
+              <app-table-skeleton [rows]="pageSize()" [columns]="3" />
             </div>
           } @else if (filteredSchemas().length === 0) {
             <div class="p-12 text-center">

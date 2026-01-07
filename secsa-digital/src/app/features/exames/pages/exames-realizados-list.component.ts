@@ -1,9 +1,11 @@
-import { Component, OnInit, signal, inject, computed } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, inject, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { LayoutComponent } from '../../../shared/components/layout.component';
 import { ButtonComponent } from '../../../shared/components/button.component';
 import { PaginationComponent, PaginationConfig } from '../../../shared/components/pagination.component';
+import { TableSkeletonComponent } from '../../../shared/components/table-skeleton.component';
 import { LucideAngularModule, Search, Plus, Eye, Edit, CheckCircle, XCircle, Printer, FileText, Calendar, User, X } from 'lucide-angular';
 import { ExameRealizadoRepository } from '../../../data/repositories/exame-realizado.repository';
 import { ExameRealizado, SchemaExame } from '../../../data/interfaces/exame.interface';
@@ -25,6 +27,7 @@ import { PdfLaudoService } from '../../../core/services/pdf-laudo.service';
     LayoutComponent,
     ButtonComponent,
     PaginationComponent,
+    TableSkeletonComponent,
     LucideAngularModule,
     ExameRealizadoFormModalComponent,
     LancarResultadosModalComponent,
@@ -163,9 +166,8 @@ import { PdfLaudoService } from '../../../core/services/pdf-laudo.service';
         <!-- Tabela de Exames -->
         <div class="bg-white rounded-lg shadow-sm overflow-hidden">
           @if (loading()) {
-            <div class="p-12 text-center">
-              <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-              <p class="mt-4 text-slate-600">Carregando exames...</p>
+            <div class="p-6">
+              <app-table-skeleton [rows]="pageSize()" [columns]="6" />
             </div>
           } @else if (filteredExames().length === 0) {
             <div class="p-12 text-center">
@@ -299,7 +301,7 @@ import { PdfLaudoService } from '../../../core/services/pdf-laudo.service';
     </app-layout>
   `
 })
-export class ExamesRealizadosListComponent implements OnInit {
+export class ExamesRealizadosListComponent implements OnInit, OnDestroy {
   // Icons
   Search = Search;
   Plus = Plus;
@@ -333,8 +335,9 @@ export class ExamesRealizadosListComponent implements OnInit {
   filteredExames = signal<ExameRealizado[]>([]);
   loading = signal(true);
   
-  // Autocomplete de Paciente
+  // Autocomplete de Paciente com debounce
   pacienteSearchTerm = '';
+  private pacienteSearchSubject = new Subject<string>();
   pacienteSuggestions = signal<Paciente[]>([]);
   selectedPaciente = signal<Paciente | null>(null);
   showPacienteSuggestions = false;
@@ -362,8 +365,31 @@ export class ExamesRealizadosListComponent implements OnInit {
   }));
 
   ngOnInit() {
+    // Setup debounce para busca de pacientes
+    this.pacienteSearchSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged()
+    ).subscribe(async (term) => {
+      if (!term.trim()) {
+        this.pacienteSuggestions.set([]);
+        return;
+      }
+
+      try {
+        console.log('🔍 Buscando pacientes com debounce:', term);
+        const result = await this.pacienteRepository.getPaginated(1, 10, term);
+        this.pacienteSuggestions.set(result.items);
+      } catch (error) {
+        console.error('❌ Erro ao buscar pacientes:', error);
+      }
+    });
+
     this.loadSchemasAtivos();
     this.loadExames();
+  }
+
+  ngOnDestroy() {
+    this.pacienteSearchSubject.complete();
   }
   
   async loadSchemasAtivos() {
@@ -425,18 +451,8 @@ export class ExamesRealizadosListComponent implements OnInit {
   }
   
   async onPacienteSearch() {
-    if (!this.pacienteSearchTerm.trim()) {
-      this.pacienteSuggestions.set([]);
-      return;
-    }
-
-    try {
-      // Buscar pacientes do cache
-      const result = await this.pacienteRepository.getPaginated(1, 10, this.pacienteSearchTerm);
-      this.pacienteSuggestions.set(result.items);
-    } catch (error) {
-      console.error('Erro ao buscar pacientes:', error);
-    }
+    // Delega para o Subject que já tem debounce configurado
+    this.pacienteSearchSubject.next(this.pacienteSearchTerm);
   }
   
   selectPaciente(paciente: Paciente) {

@@ -1,11 +1,20 @@
 export const environment = {
   production: true,
   firebase: {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyCNvR4GrOPajeMYM6GQSir8hpd0HCSSJ84",
+    authDomain: "secsa-digital.firebaseapp.com",
+    projectId: "secsa-digital",
+    storageBucket: "secsa-digital.firebasestorage.app",
+    messagingSenderId: "760024363855",
+    appId: "1:760024363855:web:bd3f91f4411202ff450b3a",
+    measurementId: "G-DGS9B2365V"
+  },
+  sentry: {
+    dsn: '', // TODO: Adicionar seu DSN do Sentry aqui
+    enabled: true,
+    environment: 'production',
+    tracesSampleRate: 0.1,
+    replaysSessionSampleRate: 0.01,
+    replaysOnErrorSampleRate: 1.0
   }
 };

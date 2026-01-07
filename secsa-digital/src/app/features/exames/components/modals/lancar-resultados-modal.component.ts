@@ -115,7 +115,7 @@ interface ParametroComStatus extends ParametroExame {
                                 (blur)="onParametroChange()"
                                 placeholder="Digite o valor"
                                 class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary pr-16"
-                                [class.border-red-500]="form?.get(parametro.id)?.invalid && form?.get(parametro.id)?.touched"
+                                [class.border-red-500]="form.get(parametro.id)?.invalid && form.get(parametro.id)?.touched"
                                 [class.bg-slate-50]="parametro.isCalculado"
                               />
                               <div class="absolute right-2 top-1/2 -translate-y-1/2">
@@ -140,7 +140,7 @@ interface ParametroComStatus extends ParametroExame {
                               </div>
                             }
                             
-                            @if (form?.get(parametro.id)?.invalid && form?.get(parametro.id)?.touched) {
+                            @if (form.get(parametro.id)?.invalid && form.get(parametro.id)?.touched) {
                               <p class="text-xs text-red-500">Campo obrigatório</p>
                             }
                           </div>

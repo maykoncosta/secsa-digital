@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { LayoutComponent } from '../../../shared/components/layout.component';
 import { ButtonComponent } from '../../../shared/components/button.component';
 import { PaginationComponent, PaginationConfig } from '../../../shared/components/pagination.component';
+import { TableSkeletonComponent } from '../../../shared/components/table-skeleton.component';
 import { LucideAngularModule, Search, UserPlus, Edit, Trash2, Power } from 'lucide-angular';
 import { PacienteRepository } from '../../../data/repositories/paciente.repository';
 import { Paciente } from '../../../data/interfaces/paciente.interface';
@@ -22,6 +23,7 @@ import { PacienteFormModalComponent } from '../components/modals/paciente-form-m
     LayoutComponent,
     ButtonComponent,
     PaginationComponent,
+    TableSkeletonComponent,
     LucideAngularModule,
     CpfPipe,
     CnsPipe,
@@ -60,9 +62,8 @@ import { PacienteFormModalComponent } from '../components/modals/paciente-form-m
         <!-- Tabela de Pacientes -->
         <div class="bg-white rounded-lg shadow-sm overflow-hidden">
           @if (loading()) {
-            <div class="p-12 text-center">
-              <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-              <p class="mt-4 text-slate-600">Carregando pacientes...</p>
+            <div class="p-6">
+              <app-table-skeleton [rows]="pageSize()" [columns]="7" />
             </div>
           } @else if (pacientes().length === 0) {
             <div class="p-12 text-center">

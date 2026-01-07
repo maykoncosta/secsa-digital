@@ -11,5 +11,13 @@ export const environment = {
   },
   api: {
     baseUrl: 'http://localhost:4200'
+  },
+  sentry: {
+    dsn: 'https://fb87a31023776179b0bf42e19b404149@o4510666701471744.ingest.us.sentry.io/4510666702782464', 
+    enabled: true, // Ativar após configurar o DSN
+    environment: 'development',
+    tracesSampleRate: 1.0, // 100% em desenvolvimento
+    replaysSessionSampleRate: 0.1, // 10% de sessões
+    replaysOnErrorSampleRate: 1.0 // 100% quando houver erro
   }
 };
