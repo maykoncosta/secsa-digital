@@ -197,4 +197,12 @@ export class PacienteRepository {
       };
     }
   }
+
+  /**
+   * Busca todos os pacientes (para dashboard/estatísticas)
+   */
+  async getAllPacientes(): Promise<Paciente[]> {
+    const snapshot = await this.firestoreService.getCollectionSnapshot<Paciente>(this.COLLECTION);
+    return snapshot;
+  }
 }

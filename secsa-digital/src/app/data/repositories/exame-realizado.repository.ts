@@ -287,4 +287,12 @@ export class ExameRealizadoRepository {
   async delete(id: string): Promise<void> {
     await this.firestoreService.deleteDocument(this.COLLECTION, id);
   }
+
+  /**
+   * Busca todos os exames (para dashboard/estatísticas)
+   */
+  async getAllExames(): Promise<ExameRealizado[]> {
+    const snapshot = await this.firestoreService.getCollectionSnapshot<ExameRealizado>(this.COLLECTION);
+    return snapshot;
+  }
 }
