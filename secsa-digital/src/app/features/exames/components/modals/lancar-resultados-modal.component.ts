@@ -56,6 +56,20 @@ interface ParametroComStatus extends ParametroExame {
                   <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
                   <p class="mt-4 text-slate-600">Carregando schema...</p>
                 </div>
+              } @else if (exame()?.status === 'liberado') {
+                <div class="py-12 text-center">
+                  <lucide-icon [img]="AlertTriangle" class="w-16 h-16 text-yellow-500 mx-auto mb-4" />
+                  <h3 class="text-lg font-semibold text-slate-900 mb-2">Exame Liberado</h3>
+                  <p class="text-slate-600">Este exame já foi liberado e não pode mais ser editado.</p>
+                  <p class="text-sm text-slate-500 mt-2">Exames liberados são imutáveis por questões de auditoria.</p>
+                  <app-button
+                    variant="primary"
+                    (onClick)="close()"
+                    class="mt-6"
+                  >
+                    Fechar
+                  </app-button>
+                </div>
               } @else if (schema()) {
                 <form [formGroup]="form" (ngSubmit)="onSubmit()">
                   <!-- Informações do Paciente -->
@@ -463,6 +477,12 @@ export class LancarResultadosModalComponent implements OnInit {
     const schema = this.schema();
     
     if (!exame || !schema) return;
+
+    // Bloquear edição de exame liberado
+    if (exame.status === 'liberado') {
+      this.toastService.show('Exames liberados não podem ser editados', 'error');
+      return;
+    }
 
     this.saving.set(true);
 

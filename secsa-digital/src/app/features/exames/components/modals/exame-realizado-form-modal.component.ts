@@ -139,7 +139,15 @@ import { Timestamp } from '@angular/fire/firestore';
                   />
                 </div>
                 @if (form.get('dataColeta')?.invalid && form.get('dataColeta')?.touched) {
-                  <p class="mt-1 text-sm text-red-500">Informe a data da coleta</p>
+                  @if (form.get('dataColeta')?.errors?.['required']) {
+                    <p class="mt-1 text-sm text-red-500">Informe a data da coleta</p>
+                  }
+                  @if (form.get('dataColeta')?.errors?.['dataFutura']) {
+                    <p class="mt-1 text-sm text-red-500">A data da coleta não pode ser futura</p>
+                  }
+                  @if (form.get('dataColeta')?.errors?.['dataAntigas']) {
+                    <p class="mt-1 text-sm text-red-500">A data da coleta não pode ser anterior a 90 dias</p>
+                  }
                 }
               </div>
 
@@ -220,9 +228,38 @@ export class ExameRealizadoFormModalComponent implements OnInit {
     this.form = this.fb.group({
       pacienteId: ['', Validators.required],
       schemaId: ['', Validators.required],
-      dataColeta: ['', Validators.required],
+      dataColeta: ['', [Validators.required, this.dataColetaValidator.bind(this)]],
       observacoesTecnicas: ['']
     });
+  }
+
+  /**
+   * Validador customizado para data de coleta
+   * - Não pode ser futura
+   * - Não pode ser anterior a 90 dias
+   */
+  dataColetaValidator(control: any) {
+    if (!control.value) return null;
+
+    const dataColeta = new Date(control.value);
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    
+    const limite90Dias = new Date();
+    limite90Dias.setDate(limite90Dias.getDate() - 90);
+    limite90Dias.setHours(0, 0, 0, 0);
+
+    // Verificar se é futura
+    if (dataColeta > hoje) {
+      return { dataFutura: true };
+    }
+
+    // Verificar se é muito antiga (> 90 dias)
+    if (dataColeta < limite90Dias) {
+      return { dataAntigas: true };
+    }
+
+    return null;
   }
 
   ngOnInit() {
@@ -309,11 +346,17 @@ export class ExameRealizadoFormModalComponent implements OnInit {
       return;
     }
 
+    // Validar se paciente está ativo
+    const paciente = this.selectedPaciente();
+    if (paciente && paciente.status !== 'ativo') {
+      this.toastService.show('Não é possível cadastrar exame para paciente inativo', 'error');
+      return;
+    }
+
     this.saving.set(true);
 
     try {
       const formValue = this.form.value;
-      const paciente = this.selectedPaciente()!;
       const schema = this.schemas().find(s => s.id === formValue.schemaId)!;
 
       // Converter data string para Timestamp

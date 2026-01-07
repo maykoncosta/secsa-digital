@@ -11,6 +11,7 @@ import { SchemaExame } from '../../../data/interfaces/exame.interface';
 import { ToastService } from '../../../core/services/toast.service';
 import { SchemaExameFormModalComponent } from '../components/modals/schema-exame-form-modal.component';
 import { SchemaExameEditModalComponent } from '../components/modals/schema-exame-edit-modal.component';
+import { ConfirmDialogComponent, ConfirmDialogData } from '../../../shared/components/confirm-dialog.component';
 
 @Component({
   selector: 'app-schemas-exames-list',
@@ -24,7 +25,8 @@ import { SchemaExameEditModalComponent } from '../components/modals/schema-exame
     TableSkeletonComponent,
     LucideAngularModule,
     SchemaExameFormModalComponent,
-    SchemaExameEditModalComponent
+    SchemaExameEditModalComponent,
+    ConfirmDialogComponent
   ],
   template: `
     <app-layout>
@@ -218,6 +220,14 @@ import { SchemaExameEditModalComponent } from '../components/modals/schema-exame
       (onClose)="closeEditModal()"
       (onSave)="onSchemaEdited()"
     />
+
+    <!-- Confirm Dialog -->
+    <app-confirm-dialog
+      [isOpen]="showConfirmDialog()"
+      [data]="confirmDialogData()"
+      (confirmed)="onConfirmDialogConfirm()"
+      (cancelled)="onConfirmDialogCancel()"
+    />
   `
 })
 export class SchemasExamesListComponent implements OnInit {
@@ -233,6 +243,15 @@ export class SchemasExamesListComponent implements OnInit {
   selectedSchema = signal<SchemaExame | null>(null);
   showEditModal = signal(false);
   schemaToEdit = signal<SchemaExame | null>(null);
+
+  // Confirm Dialog
+  showConfirmDialog = signal(false);
+  confirmDialogData = signal<ConfirmDialogData>({
+    title: '',
+    message: '',
+    type: 'info'
+  });
+  confirmAction: (() => void) | null = null;
   
   // Services
   private schemaRepository = inject(SchemaExameRepository);
@@ -337,18 +356,24 @@ export class SchemasExamesListComponent implements OnInit {
   }
 
   async inactivateSchema(schema: SchemaExame) {
-    if (!confirm(`Deseja realmente inativar o schema "${schema.nome}"?`)) {
-      return;
-    }
-
-    try {
-      await this.schemaRepository.inactivate(schema.id);
-      this.toastService.showSuccess('Schema inativado com sucesso');
-      this.loadSchemas();
-    } catch (error) {
-      console.error('Erro ao inativar schema:', error);
-      this.toastService.showError('Erro ao inativar schema');
-    }
+    this.confirmDialogData.set({
+      title: 'Inativar Schema',
+      message: `Deseja realmente inativar o schema "${schema.nome}"?`,
+      confirmText: 'Inativar',
+      cancelText: 'Cancelar',
+      type: 'warning'
+    });
+    this.confirmAction = async () => {
+      try {
+        await this.schemaRepository.inactivate(schema.id);
+        this.toastService.showSuccess('Schema inativado com sucesso');
+        this.loadSchemas();
+      } catch (error) {
+        console.error('Erro ao inativar schema:', error);
+        this.toastService.showError('Erro ao inativar schema');
+      }
+    };
+    this.showConfirmDialog.set(true);
   }
 
   async activateSchema(schema: SchemaExame) {
@@ -363,17 +388,36 @@ export class SchemasExamesListComponent implements OnInit {
   }
 
   async deleteSchema(schema: SchemaExame) {
-    if (!confirm(`Deseja realmente EXCLUIR permanentemente o schema "${schema.nome}"?\n\nEsta ação não pode ser desfeita!`)) {
-      return;
-    }
+    this.confirmDialogData.set({
+      title: 'Excluir Schema',
+      message: `Deseja realmente EXCLUIR permanentemente o schema "${schema.nome}"?\n\nEsta ação não pode ser desfeita!`,
+      confirmText: 'Excluir',
+      cancelText: 'Cancelar',
+      type: 'danger'
+    });
+    this.confirmAction = async () => {
+      try {
+        await this.schemaRepository.delete(schema.id);
+        this.toastService.showSuccess('Schema excluído com sucesso');
+        this.loadSchemas();
+      } catch (error) {
+        console.error('Erro ao excluir schema:', error);
+        this.toastService.showError('Erro ao excluir schema. Pode haver exames vinculados a ele.');
+      }
+    };
+    this.showConfirmDialog.set(true);
+  }
 
-    try {
-      await this.schemaRepository.delete(schema.id);
-      this.toastService.showSuccess('Schema excluído com sucesso');
-      this.loadSchemas();
-    } catch (error) {
-      console.error('Erro ao excluir schema:', error);
-      this.toastService.showError('Erro ao excluir schema. Pode haver exames vinculados a ele.');
+  onConfirmDialogConfirm() {
+    this.showConfirmDialog.set(false);
+    if (this.confirmAction) {
+      this.confirmAction();
+      this.confirmAction = null;
     }
+  }
+
+  onConfirmDialogCancel() {
+    this.showConfirmDialog.set(false);
+    this.confirmAction = null;
   }
 }

@@ -6,13 +6,14 @@ import { LayoutComponent } from '../../../shared/components/layout.component';
 import { ButtonComponent } from '../../../shared/components/button.component';
 import { PaginationComponent, PaginationConfig } from '../../../shared/components/pagination.component';
 import { TableSkeletonComponent } from '../../../shared/components/table-skeleton.component';
-import { LucideAngularModule, Search, Plus, Eye, Edit, CheckCircle, XCircle, Printer, FileText, Calendar, User, X } from 'lucide-angular';
+import { LucideAngularModule, Search, Plus, Eye, Edit, CheckCircle, XCircle, Printer, FileText, Calendar, User, X, Trash2 } from 'lucide-angular';
 import { ExameRealizadoRepository } from '../../../data/repositories/exame-realizado.repository';
 import { ExameRealizado, SchemaExame } from '../../../data/interfaces/exame.interface';
 import { ToastService } from '../../../core/services/toast.service';
 import { ExameRealizadoFormModalComponent } from '../components/modals/exame-realizado-form-modal.component';
 import { LancarResultadosModalComponent } from '../components/modals/lancar-resultados-modal.component';
 import { VisualizarResultadoModalComponent } from '../components/modals/visualizar-resultado-modal.component';
+import { ConfirmDialogComponent, ConfirmDialogData } from '../../../shared/components/confirm-dialog.component';
 import { SchemaExameRepository } from '../../../data/repositories/schema-exame.repository';
 import { PacienteRepository } from '../../../data/repositories/paciente.repository';
 import { Paciente } from '../../../data/interfaces/paciente.interface';
@@ -31,7 +32,8 @@ import { PdfLaudoService } from '../../../core/services/pdf-laudo.service';
     LucideAngularModule,
     ExameRealizadoFormModalComponent,
     LancarResultadosModalComponent,
-    VisualizarResultadoModalComponent
+    VisualizarResultadoModalComponent,
+    ConfirmDialogComponent
   ],
   template: `
     <app-layout>
@@ -226,9 +228,23 @@ import { PdfLaudoService } from '../../../core/services/pdf-laudo.service';
                           >
                             <lucide-icon [img]="Edit" class="w-4 h-4" />
                           </button>
+                          <button
+                            (click)="excluirExame(exame)"
+                            class="text-red-600 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-colors"
+                            title="Excluir Exame"
+                          >
+                            <lucide-icon [img]="Trash2" class="w-4 h-4" />
+                          </button>
                         }
                         
                         @if (exame.status === 'finalizado') {
+                          <button
+                            (click)="lancarResultados(exame)"
+                            class="text-blue-600 hover:text-blue-700 p-2 rounded-lg hover:bg-blue-50 transition-colors"
+                            title="Editar Resultados"
+                          >
+                            <lucide-icon [img]="Edit" class="w-4 h-4" />
+                          </button>
                           <button
                             (click)="liberarExame(exame)"
                             class="text-green-600 hover:text-green-700 p-2 rounded-lg hover:bg-green-50 transition-colors"
@@ -298,6 +314,14 @@ import { PdfLaudoService } from '../../../core/services/pdf-laudo.service';
         [exame]="exameParaVisualizar()"
         (onClose)="closeVisualizarModal()"
       />
+
+      <!-- Confirm Dialog -->
+      <app-confirm-dialog
+        [isOpen]="showConfirmDialog()"
+        [data]="confirmDialogData()"
+        (confirmed)="onConfirmDialogConfirm()"
+        (cancelled)="onConfirmDialogCancel()"
+      />
     </app-layout>
   `
 })
@@ -314,6 +338,7 @@ export class ExamesRealizadosListComponent implements OnInit, OnDestroy {
   Calendar = Calendar;
   User = User;
   X = X;
+  Trash2 = Trash2;
 
   // Services
   private exameRepository = inject(ExameRealizadoRepository);
@@ -327,6 +352,16 @@ export class ExamesRealizadosListComponent implements OnInit, OnDestroy {
   exameParaResultados = signal<ExameRealizado | null>(null);
   showVisualizarModal = signal(false);
   exameParaVisualizar = signal<ExameRealizado | null>(null);
+
+  // Confirm Dialog
+  showConfirmDialog = signal(false);
+  confirmDialogData = signal<ConfirmDialogData>({
+    title: '',
+    message: '',
+    type: 'info'
+  });
+  confirmAction: (() => void) | null = null;
+  
   showModal = signal(false);
   selectedExame = signal<ExameRealizado | null>(null);
 
@@ -562,18 +597,63 @@ export class ExamesRealizadosListComponent implements OnInit, OnDestroy {
   }
 
   async liberarExame(exame: ExameRealizado) {
-    if (!confirm(`Deseja liberar o exame "${exame.schemaNome}" do paciente ${exame.paciente.nome}?`)) {
+    this.confirmDialogData.set({
+      title: 'Liberar Exame',
+      message: `Deseja liberar o exame "${exame.schemaNome}" do paciente ${exame.paciente.nome}?`,
+      confirmText: 'Liberar',
+      cancelText: 'Cancelar',
+      type: 'info'
+    });
+    this.confirmAction = async () => {
+      try {
+        await this.exameRepository.updateStatus(exame.uid, 'liberado', 'current-user-id');
+        this.toastService.show('Exame liberado com sucesso', 'success');
+        this.loadExames();
+      } catch (error) {
+        console.error('Erro ao liberar exame:', error);
+        this.toastService.show('Erro ao liberar exame', 'error');
+      }
+    };
+    this.showConfirmDialog.set(true);
+  }
+
+  async excluirExame(exame: ExameRealizado) {
+    if (exame.status !== 'pendente') {
+      this.toastService.show('Apenas exames pendentes podem ser excluídos', 'error');
       return;
     }
 
-    try {
-      await this.exameRepository.updateStatus(exame.uid, 'liberado', 'current-user-id');
-      this.toastService.show('Exame liberado com sucesso', 'success');
-      this.loadExames();
-    } catch (error) {
-      console.error('Erro ao liberar exame:', error);
-      this.toastService.show('Erro ao liberar exame', 'error');
+    this.confirmDialogData.set({
+      title: 'Excluir Exame',
+      message: `Deseja realmente excluir o exame "${exame.schemaNome}" do paciente ${exame.paciente.nome}?\n\nEsta ação não pode ser desfeita.`,
+      confirmText: 'Excluir',
+      cancelText: 'Cancelar',
+      type: 'danger'
+    });
+    this.confirmAction = async () => {
+      try {
+        await this.exameRepository.delete(exame.uid);
+        this.toastService.show('Exame excluído com sucesso', 'success');
+        this.loadExames();
+      } catch (error) {
+        console.error('Erro ao excluir exame:', error);
+        this.toastService.show('Erro ao excluir exame', 'error');
+      }
+    };
+    this.showConfirmDialog.set(true);
+  }
+
+  onConfirmDialogConfirm() {
+    this.showConfirmDialog.set(false);
+    if (this.confirmAction) {
+      this.confirmAction();
+      this.confirmAction = null;
     }
+  }
+
+  onConfirmDialogCancel() {
+    this.showConfirmDialog.set(false);
+    this.confirmAction = null;
   }
 
   imprimirLaudo(exame: ExameRealizado) {
