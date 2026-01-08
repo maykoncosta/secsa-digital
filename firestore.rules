@@ -1,0 +1,32 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Regras para pacientes
+    match /pacientes/{pacienteId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Regras para exames realizados
+    match /exames-realizados/{exameId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Regras para schemas de exames
+    match /configuracoesExames/{schemaId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Regras para estatísticas (apenas leitura para usuários autenticados)
+    match /estatisticas/{docId} {
+      allow read: if request.auth != null;
+      allow write: if false; // Apenas Cloud Functions podem escrever
+    }
+    
+    // Regras para top exames (apenas leitura para usuários autenticados)
+    match /top-exames/{exameId} {
+      allow read: if request.auth != null;
+      allow write: if false; // Apenas Cloud Functions podem escrever
+    }
+  }
+}

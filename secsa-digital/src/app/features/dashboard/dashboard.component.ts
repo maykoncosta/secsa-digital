@@ -1,9 +1,10 @@
-import { Component, OnInit, signal, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LayoutComponent } from '../../shared/components/layout.component';
 import { LucideAngularModule, Activity, Clock, CheckCircle, AlertCircle, Users, TrendingUp } from 'lucide-angular';
-import { ExameRealizadoRepository } from '../../data/repositories/exame-realizado.repository';
-import { PacienteRepository } from '../../data/repositories/paciente.repository';
+import { EstatisticasRepository } from '../../data/repositories/estatisticas.repository';
+import { EstatisticasGeral, TopExame } from '../../data/interfaces/estatisticas.interface';
+import { Subscription } from 'rxjs';
 
 interface DashboardStats {
   totalExames: number;
@@ -12,11 +13,6 @@ interface DashboardStats {
   examesLiberados: number;
   totalPacientes: number;
   examesHoje: number;
-}
-
-interface TopExame {
-  nome: string;
-  quantidade: number;
 }
 
 @Component({
@@ -171,9 +167,8 @@ interface TopExame {
     </app-layout>
   `
 })
-export class DashboardComponent implements OnInit {
-  private exameRepository = inject(ExameRealizadoRepository);
-  private pacienteRepository = inject(PacienteRepository);
+export class DashboardComponent implements OnInit, OnDestroy {
+  private estatisticasRepository = inject(EstatisticasRepository);
 
   // Icons
   Activity = Activity;
@@ -195,66 +190,52 @@ export class DashboardComponent implements OnInit {
   });
   topExames = signal<TopExame[]>([]);
 
+  // Subscriptions
+  private subscriptions = new Subscription();
+
   ngOnInit() {
     this.loadDashboardData();
   }
 
-  async loadDashboardData() {
+  ngOnDestroy() {
+    this.subscriptions.unsubscribe();
+  }
+
+  loadDashboardData() {
     this.loading.set(true);
 
-    try {
-      // Buscar todos os exames
-      const exames = await this.exameRepository.getAllExames();
-      
-      // Buscar todos os pacientes
-      const pacientes = await this.pacienteRepository.getAllPacientes();
+    // Subscribe para estatísticas gerais (em tempo real)
+    const statsSub = this.estatisticasRepository.getEstatisticasGeral().subscribe({
+      next: (data: EstatisticasGeral | undefined) => {
+        if (data) {
+          this.stats.set({
+            totalExames: data.totalExames || 0,
+            examesPendentes: data.exames_pendente || 0,
+            examesFinalizados: data.exames_finalizado || 0,
+            examesLiberados: data.exames_liberado || 0,
+            totalPacientes: data.totalPacientes || 0,
+            examesHoje: data.examesHoje || 0
+          });
+        }
+        this.loading.set(false);
+      },
+      error: (error) => {
+        console.error('Erro ao carregar estatísticas:', error);
+        this.loading.set(false);
+      }
+    });
 
-      // Calcular data de hoje (início do dia)
-      const hoje = new Date();
-      hoje.setHours(0, 0, 0, 0);
+    // Subscribe para top exames (em tempo real)
+    const topExamesSub = this.estatisticasRepository.getTopExames().subscribe({
+      next: (data: TopExame[]) => {
+        this.topExames.set(data);
+      },
+      error: (error) => {
+        console.error('Erro ao carregar top exames:', error);
+      }
+    });
 
-      // Calcular estatísticas
-      const totalExames = exames.length;
-      const examesPendentes = exames.filter(e => e.status === 'pendente').length;
-      const examesFinalizados = exames.filter(e => e.status === 'finalizado').length;
-      const examesLiberados = exames.filter(e => e.status === 'liberado').length;
-      const totalPacientes = pacientes.length;
-      
-      // Exames de hoje
-      const examesHoje = exames.filter(e => {
-        const dataColeta = e.dataColeta.toDate();
-        dataColeta.setHours(0, 0, 0, 0);
-        return dataColeta.getTime() === hoje.getTime();
-      }).length;
-
-      this.stats.set({
-        totalExames,
-        examesPendentes,
-        examesFinalizados,
-        examesLiberados,
-        totalPacientes,
-        examesHoje
-      });
-
-      // Calcular top exames
-      const exameCount = new Map<string, number>();
-      exames.forEach(exame => {
-        const count = exameCount.get(exame.schemaNome) || 0;
-        exameCount.set(exame.schemaNome, count + 1);
-      });
-
-      // Converter para array e ordenar
-      const topExamesArray: TopExame[] = Array.from(exameCount.entries())
-        .map(([nome, quantidade]) => ({ nome, quantidade }))
-        .sort((a, b) => b.quantidade - a.quantidade)
-        .slice(0, 10);
-
-      this.topExames.set(topExamesArray);
-
-    } catch (error) {
-      console.error('Erro ao carregar dados do dashboard:', error);
-    } finally {
-      this.loading.set(false);
-    }
+    this.subscriptions.add(statsSub);
+    this.subscriptions.add(topExamesSub);
   }
 }
