@@ -8,13 +8,21 @@ import { LucideAngularModule, X, CheckCircle, AlertCircle, AlertTriangle, Info }
   standalone: true,
   imports: [CommonModule, LucideAngularModule],
   template: `
-    <div class="fixed top-4 right-4 z-50 space-y-2">
+    <div 
+      class="fixed top-4 right-4 z-50 space-y-2"
+      role="region"
+      aria-label="Notificações"
+      aria-live="polite"
+      aria-atomic="false"
+    >
       @for (toast of toastService.toasts(); track toast.id) {
         <div
           [class]="getToastClasses(toast.type)"
           class="min-w-80 rounded-lg shadow-lg p-4 flex items-start gap-3 animate-slide-in"
+          role="alert"
+          [attr.aria-label]="getAriaLabel(toast.type, toast.message)"
         >
-          <div class="flex-shrink-0">
+          <div class="flex-shrink-0" aria-hidden="true">
             @switch (toast.type) {
               @case ('success') {
                 <lucide-icon [img]="CheckCircle" class="w-5 h-5" />
@@ -34,10 +42,12 @@ import { LucideAngularModule, X, CheckCircle, AlertCircle, AlertTriangle, Info }
           <p class="flex-1 text-sm font-medium">{{ toast.message }}</p>
           
           <button
+            type="button"
             (click)="toastService.remove(toast.id)"
-            class="flex-shrink-0 hover:opacity-70 transition-opacity"
+            class="flex-shrink-0 hover:opacity-70 transition-opacity focus:outline-none focus:ring-2 focus:ring-slate-400 rounded"
+            aria-label="Fechar notificação"
           >
-            <lucide-icon [img]="X" class="w-4 h-4" />
+            <lucide-icon [img]="X" class="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
       }
@@ -78,5 +88,16 @@ export class ToastContainerComponent {
     };
     
     return classes[type] || classes['info'];
+  }
+
+  getAriaLabel(type: string, message: string): string {
+    const typeLabels: Record<string, string> = {
+      success: 'Sucesso',
+      error: 'Erro',
+      warning: 'Aviso',
+      info: 'Informação'
+    };
+    
+    return `${typeLabels[type] || 'Notificação'}: ${message}`;
   }
 }

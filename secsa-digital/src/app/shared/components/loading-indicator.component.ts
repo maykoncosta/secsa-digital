@@ -18,12 +18,18 @@ import { LucideAngularModule, Loader2 } from 'lucide-angular';
   imports: [CommonModule, LucideAngularModule],
   template: `
     @if (isLoading()) {
-      <div class="fixed top-0 left-0 right-0 z-50 bg-primary shadow-lg">
-        <div class="h-1 bg-primary-dark animate-pulse"></div>
+      <div 
+        class="fixed top-0 left-0 right-0 z-50 bg-primary shadow-lg"
+        role="status"
+        aria-live="polite"
+        aria-label="Carregando conteúdo"
+      >
+        <div class="h-1 bg-primary-dark animate-pulse" aria-hidden="true"></div>
         <div class="flex items-center justify-center gap-2 py-2 px-4 bg-primary/95 backdrop-blur-sm">
           <lucide-icon 
             [img]="Loader2" 
             class="w-4 h-4 text-white animate-spin"
+            aria-hidden="true"
           />
           <span class="text-sm font-medium text-white">
             Carregando...

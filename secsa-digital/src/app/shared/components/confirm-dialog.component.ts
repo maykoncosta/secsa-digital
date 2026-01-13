@@ -17,10 +17,17 @@ export interface ConfirmDialogData {
   imports: [CommonModule, ButtonComponent, LucideAngularModule],
   template: `
     @if (isOpen()) {
-      <div class="fixed inset-0 z-50 overflow-y-auto" (click)="onBackdropClick($event)">
+      <div 
+        class="fixed inset-0 z-50 overflow-y-auto" 
+        (click)="onBackdropClick($event)"
+        role="dialog"
+        aria-modal="true"
+        [attr.aria-labelledby]="'dialog-title-' + dialogId"
+        [attr.aria-describedby]="'dialog-description-' + dialogId"
+      >
         <div class="flex min-h-screen items-center justify-center p-4">
           <!-- Backdrop -->
-          <div class="fixed inset-0 bg-black/50 transition-opacity"></div>
+          <div class="fixed inset-0 bg-black/50 transition-opacity" aria-hidden="true"></div>
           
           <!-- Modal -->
           <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-md" (click)="$event.stopPropagation()">
@@ -33,23 +40,34 @@ export interface ConfirmDialogData {
                     class="w-6 h-6"
                     [class.text-red-600]="data().type === 'danger'"
                     [class.text-yellow-600]="data().type === 'warning'"
+                    aria-hidden="true"
                   />
                 }
-                <h2 class="text-xl font-semibold text-slate-900">
+                <h2 
+                  [id]="'dialog-title-' + dialogId"
+                  class="text-xl font-semibold text-slate-900"
+                >
                   {{ data().title }}
                 </h2>
               </div>
               <button
+                type="button"
                 (click)="onCancel()"
-                class="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-lg hover:bg-slate-100"
+                class="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-lg hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-300"
+                aria-label="Fechar diálogo"
               >
-                <lucide-icon [img]="X" class="w-5 h-5" />
+                <lucide-icon [img]="X" class="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
 
             <!-- Body -->
             <div class="px-6 py-6">
-              <p class="text-slate-700 whitespace-pre-line">{{ data().message }}</p>
+              <p 
+                [id]="'dialog-description-' + dialogId"
+                class="text-slate-700 whitespace-pre-line"
+              >
+                {{ data().message }}
+              </p>
             </div>
 
             <!-- Footer -->
@@ -57,12 +75,14 @@ export interface ConfirmDialogData {
               <app-button
                 variant="secondary"
                 (onClick)="onCancel()"
+                [ariaLabel]="data().cancelText || 'Cancelar ação'"
               >
                 {{ data().cancelText || 'Cancelar' }}
               </app-button>
               <app-button
                 [variant]="data().type === 'danger' ? 'danger' : 'primary'"
                 (onClick)="onConfirm()"
+                [ariaLabel]="data().confirmText || 'Confirmar ação'"
               >
                 {{ data().confirmText || 'Confirmar' }}
               </app-button>
@@ -85,6 +105,9 @@ export class ConfirmDialogComponent {
 
   confirmed = output<void>();
   cancelled = output<void>();
+
+  // Unique ID for accessibility
+  dialogId = Math.random().toString(36).substr(2, 9);
 
   // Icons
   AlertTriangle = AlertTriangle;

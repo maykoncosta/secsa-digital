@@ -13,9 +13,13 @@ export interface PaginationConfig {
   standalone: true,
   imports: [CommonModule, LucideAngularModule],
   template: `
-    <div class="flex items-center justify-between px-6 py-4 bg-white border-t border-slate-200">
+    <nav 
+      class="flex items-center justify-between px-6 py-4 bg-white border-t border-slate-200"
+      role="navigation"
+      aria-label="Navegação de páginas"
+    >
       <!-- Info de Resultados -->
-      <div class="text-sm text-slate-600">
+      <div class="text-sm text-slate-600" role="status" aria-live="polite">
         Mostrando <span class="font-medium">{{ startItem() }}</span> a 
         <span class="font-medium">{{ endItem() }}</span> de 
         <span class="font-medium">{{ config().totalItems }}</span> resultados
@@ -25,40 +29,47 @@ export interface PaginationConfig {
       <div class="flex items-center gap-2">
         <!-- Primeira Página -->
         <button
+          type="button"
           (click)="goToFirstPage()"
           [disabled]="isFirstPage()"
+          [attr.aria-disabled]="isFirstPage()"
           [class.opacity-50]="isFirstPage()"
           [class.cursor-not-allowed]="isFirstPage()"
-          class="p-2 rounded-lg hover:bg-slate-100 transition-colors disabled:hover:bg-transparent"
-          title="Primeira página"
+          class="p-2 rounded-lg hover:bg-slate-100 transition-colors disabled:hover:bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/30"
+          aria-label="Ir para primeira página"
         >
-          <lucide-icon [img]="ChevronsLeft" class="w-4 h-4" />
+          <lucide-icon [img]="ChevronsLeft" class="w-4 h-4" aria-hidden="true" />
         </button>
 
         <!-- Página Anterior -->
         <button
+          type="button"
           (click)="previousPage()"
           [disabled]="isFirstPage()"
+          [attr.aria-disabled]="isFirstPage()"
           [class.opacity-50]="isFirstPage()"
           [class.cursor-not-allowed]="isFirstPage()"
-          class="p-2 rounded-lg hover:bg-slate-100 transition-colors disabled:hover:bg-transparent"
-          title="Página anterior"
+          class="p-2 rounded-lg hover:bg-slate-100 transition-colors disabled:hover:bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/30"
+          aria-label="Ir para página anterior"
         >
-          <lucide-icon [img]="ChevronLeft" class="w-4 h-4" />
+          <lucide-icon [img]="ChevronLeft" class="w-4 h-4" aria-hidden="true" />
         </button>
 
         <!-- Números de Página -->
-        <div class="flex gap-1">
+        <div class="flex gap-1" role="list" aria-label="Páginas">
           @for (page of visiblePages(); track page) {
             @if (page === -1) {
-              <span class="px-3 py-2 text-slate-400">...</span>
+              <span class="px-3 py-2 text-slate-400" aria-hidden="true">...</span>
             } @else {
               <button
+                type="button"
                 (click)="goToPage(page)"
+                [attr.aria-current]="page === config().currentPage ? 'page' : null"
+                [attr.aria-label]="'Ir para página ' + page"
                 [class.bg-primary]="page === config().currentPage"
                 [class.text-white]="page === config().currentPage"
                 [class.hover:bg-slate-100]="page !== config().currentPage"
-                class="px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+                class="px-3 py-2 rounded-lg text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-primary/30"
               >
                 {{ page }}
               </button>
@@ -68,41 +79,49 @@ export interface PaginationConfig {
 
         <!-- Próxima Página -->
         <button
+          type="button"
           (click)="nextPage()"
           [disabled]="isLastPage()"
+          [attr.aria-disabled]="isLastPage()"
           [class.opacity-50]="isLastPage()"
           [class.cursor-not-allowed]="isLastPage()"
-          class="p-2 rounded-lg hover:bg-slate-100 transition-colors disabled:hover:bg-transparent"
-          title="Próxima página"
+          class="p-2 rounded-lg hover:bg-slate-100 transition-colors disabled:hover:bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/30"
+          aria-label="Ir para próxima página"
         >
-          <lucide-icon [img]="ChevronRight" class="w-4 h-4" />
+          <lucide-icon [img]="ChevronRight" class="w-4 h-4" aria-hidden="true" />
         </button>
 
         <!-- Última Página -->
         <button
+          type="button"
           (click)="goToLastPage()"
           [disabled]="isLastPage()"
+          [attr.aria-disabled]="isLastPage()"
           [class.opacity-50]="isLastPage()"
           [class.cursor-not-allowed]="isLastPage()"
-          class="p-2 rounded-lg hover:bg-slate-100 transition-colors disabled:hover:bg-transparent"
-          title="Última página"
+          class="p-2 rounded-lg hover:bg-slate-100 transition-colors disabled:hover:bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/30"
+          aria-label="Ir para última página"
         >
-          <lucide-icon [img]="ChevronsRight" class="w-4 h-4" />
+          <lucide-icon [img]="ChevronsRight" class="w-4 h-4" aria-hidden="true" />
         </button>
 
         <!-- Seletor de Tamanho de Página -->
-        <select
-          [value]="config().pageSize"
-          (change)="onPageSizeChange($event)" 
-          class="ml-4 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-        >
-          <option value="10">10 por página</option>
-          <option value="25">25 por página</option>
-          <option value="50">50 por página</option>
-          <option value="100">100 por página</option>
-        </select>
+        <label class="ml-4">
+          <span class="sr-only">Itens por página</span>
+          <select
+            [value]="config().pageSize"
+            (change)="onPageSizeChange($event)" 
+            class="px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+            aria-label="Selecionar quantidade de itens por página"
+          >
+            <option value="10">10 por página</option>
+            <option value="25">25 por página</option>
+            <option value="50">50 por página</option>
+            <option value="100">100 por página</option>
+          </select>
+        </label>
       </div>
-    </div>
+    </nav>
   `
 })
 export class PaginationComponent {

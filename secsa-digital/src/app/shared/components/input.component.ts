@@ -19,7 +19,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR, ReactiveFormsModule } from '@a
         <label [for]="id()" class="block text-xs font-semibold text-slate-600">
           {{ label() }}
           @if (required()) {
-            <span class="text-error">*</span>
+            <span class="text-error" aria-label="obrigatório">*</span>
           }
         </label>
       }
@@ -30,17 +30,26 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR, ReactiveFormsModule } from '@a
         [placeholder]="placeholder()"
         [disabled]="isDisabled"
         [value]="value"
+        [required]="required()"
+        [attr.aria-label]="ariaLabel() || label()"
+        [attr.aria-describedby]="getAriaDescribedBy()"
+        [attr.aria-invalid]="error() && touched"
+        [attr.aria-required]="required()"
         (input)="onInput($event)"
         (blur)="onTouched()"
         [class]="getInputClasses()"
       />
       
       @if (error() && touched) {
-        <p class="text-xs text-error">{{ error() }}</p>
+        <p [id]="id() + '-error'" class="text-xs text-error" role="alert" aria-live="polite">
+          {{ error() }}
+        </p>
       }
       
       @if (helperText() && !error()) {
-        <p class="text-xs text-slate-500">{{ helperText() }}</p>
+        <p [id]="id() + '-helper'" class="text-xs text-slate-500">
+          {{ helperText() }}
+        </p>
       }
     </div>
   `,
@@ -54,6 +63,7 @@ export class InputComponent implements ControlValueAccessor {
   required = input<boolean>(false);
   error = input<string>('');
   helperText = input<string>('');
+  ariaLabel = input<string>('');
   
   value: string = '';
   isDisabled = false;
@@ -83,6 +93,17 @@ export class InputComponent implements ControlValueAccessor {
     this.value = input.value;
     this.onChange(this.value);
     this.touched = true;
+  }
+
+  getAriaDescribedBy(): string {
+    const ids: string[] = [];
+    if (this.error() && this.touched) {
+      ids.push(`${this.id()}-error`);
+    }
+    if (this.helperText() && !this.error()) {
+      ids.push(`${this.id()}-helper`);
+    }
+    return ids.join(' ');
   }
 
   getInputClasses(): string {

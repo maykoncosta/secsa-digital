@@ -10,21 +10,29 @@ import { LucideAngularModule, Users, FlaskConical, LayoutDashboard, ListChecks, 
   template: `
     <div class="min-h-screen bg-slate-50">
       <!-- Sidebar -->
-      <aside class="fixed top-0 left-0 h-full w-64 bg-white border-r border-slate-200 z-40">
+      <aside 
+        class="fixed top-0 left-0 h-full w-64 bg-white border-r border-slate-200 z-40"
+        role="complementary"
+        aria-label="Menu de navegação principal"
+      >
         <!-- Logo -->
         <div class="h-16 flex items-center px-6 border-b border-slate-200">
-          <h1 class="text-xl font-bold text-primary">🏥 SECSA Digital</h1>
+          <h1 class="text-xl font-bold text-primary">
+            <span aria-hidden="true">🏥</span> 
+            <span>SECSA Digital</span>
+          </h1>
         </div>
         
         <!-- Navigation -->
-        <nav class="p-4 space-y-1">
+        <nav class="p-4 space-y-1" aria-label="Menu principal">
           <a
             routerLink="/dashboard"
             routerLinkActive="bg-primary text-white"
             [routerLinkActiveOptions]="{exact: false}"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-4 focus:ring-primary/30 focus:ring-offset-2"
+            aria-label="Ir para Dashboard"
           >
-            <lucide-icon [img]="LayoutDashboard" class="w-5 h-5" />
+            <lucide-icon [img]="LayoutDashboard" class="w-5 h-5" aria-hidden="true" />
             <span class="font-medium">Dashboard</span>
           </a>
           
@@ -32,9 +40,10 @@ import { LucideAngularModule, Users, FlaskConical, LayoutDashboard, ListChecks, 
             routerLink="/pacientes"
             routerLinkActive="bg-primary text-white"
             [routerLinkActiveOptions]="{exact: false}"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-4 focus:ring-primary/30 focus:ring-offset-2"
+            aria-label="Ir para Pacientes"
           >
-            <lucide-icon [img]="Users" class="w-5 h-5" />
+            <lucide-icon [img]="Users" class="w-5 h-5" aria-hidden="true" />
             <span class="font-medium">Pacientes</span>
           </a>
           
@@ -42,9 +51,10 @@ import { LucideAngularModule, Users, FlaskConical, LayoutDashboard, ListChecks, 
             routerLink="/exames/schemas"
             routerLinkActive="bg-primary text-white"
             [routerLinkActiveOptions]="{exact: false}"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-4 focus:ring-primary/30 focus:ring-offset-2"
+            aria-label="Ir para Schemas de Exames"
           >
-            <lucide-icon [img]="FlaskConical" class="w-5 h-5" />
+            <lucide-icon [img]="FlaskConical" class="w-5 h-5" aria-hidden="true" />
             <span class="font-medium">Schemas de Exames</span>
           </a>
           
@@ -52,24 +62,28 @@ import { LucideAngularModule, Users, FlaskConical, LayoutDashboard, ListChecks, 
             routerLink="/exames/realizados"
             routerLinkActive="bg-primary text-white"
             [routerLinkActiveOptions]="{exact: false}"
-            class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors"
+            class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-4 focus:ring-primary/30 focus:ring-offset-2"
+            aria-label="Ir para Exames Realizados"
           >
-            <lucide-icon [img]="ListChecks" class="w-5 h-5" />
+            <lucide-icon [img]="ListChecks" class="w-5 h-5" aria-hidden="true" />
             <span class="font-medium">Exames Realizados</span>
           </a>
         </nav>
       </aside>
       
       <!-- Main Content -->
-      <main class="ml-64">
+      <main class="ml-64" role="main">
         <!-- Header -->
-        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8">
+        <header 
+          class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8"
+          role="banner"
+        >
           <h2 class="text-lg font-semibold text-slate-800">
             <ng-content select="[header]"></ng-content>
           </h2>
           
           <div class="flex items-center gap-4">
-            <span class="text-sm text-slate-600">Usuário Admin</span>
+            <span class="text-sm text-slate-600" aria-label="Usuário atual: Admin">Usuário Admin</span>
           </div>
         </header>
         
