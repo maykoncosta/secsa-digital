@@ -348,7 +348,7 @@ export class VisualizarResultadoModalComponent implements OnInit {
     }).format(date);
   }
 
-  imprimir() {
+  async imprimir() {
     const exame = this.exame();
     const schema = this.schema();
     
@@ -358,7 +358,7 @@ export class VisualizarResultadoModalComponent implements OnInit {
     }
 
     try {
-      this.pdfService.gerarLaudo(exame, schema);
+      await this.pdfService.gerarLaudo(exame, schema);
       this.toastService.show('Laudo gerado com sucesso!', 'success');
     } catch (error) {
       console.error('Erro ao gerar PDF:', error);

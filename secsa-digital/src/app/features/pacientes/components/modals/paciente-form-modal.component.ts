@@ -336,18 +336,29 @@ export class PacienteFormModalComponent implements OnInit {
       const formValue = this.form.value;
       
       if (this.isEditMode()) {
+        // Converter data de nascimento sem timezone (manter a data exata)
+        const [ano, mes, dia] = formValue.dataNascimento.split('-');
+        const dataNascimento = new Date(parseInt(ano), parseInt(mes) - 1, parseInt(dia), 12, 0, 0);
+        
         // Atualizar paciente existente
-        await this.pacienteRepo.update(this.paciente()!.id, formValue);
+        await this.pacienteRepo.update(this.paciente()!.id, {
+          ...formValue,
+          dataNascimento
+        });
         this.toastService.success('Paciente atualizado com sucesso!');
       } else {
         // Gerar número do prontuário (implementação simplificada)
         const numeroProntuario = `PAC-${Date.now().toString().slice(-5)}`;
         
+        // Converter data de nascimento sem timezone (manter a data exata)
+        const [ano, mes, dia] = formValue.dataNascimento.split('-');
+        const dataNascimento = new Date(parseInt(ano), parseInt(mes) - 1, parseInt(dia), 12, 0, 0);
+        
         const novoPaciente = {
           ...formValue,
           numeroProntuario,
           status: 'ativo' as const,
-          dataNascimento: new Date(formValue.dataNascimento)
+          dataNascimento
         };
         
         await this.pacienteRepo.add(novoPaciente);

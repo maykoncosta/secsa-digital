@@ -34,20 +34,20 @@ import { LucideAngularModule, Lock, Mail, Eye, EyeOff } from 'lucide-angular';
           </h2>
 
           <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" novalidate>
-            <!-- Email -->
+            <!-- Email ou CPF/CNS -->
             <div class="mb-4">
               <label for="email" class="block text-sm font-semibold text-gray-700 mb-2">
                 <span class="flex items-center gap-2">
                   <lucide-icon [img]="Mail" class="w-4 h-4" aria-hidden="true" />
-                  Email
+                  Email, CPF ou CNS
                 </span>
               </label>
               <input
                 id="email"
-                type="email"
+                type="text"
                 formControlName="email"
-                placeholder="seu@email.com"
-                autocomplete="email"
+                placeholder="email, CPF ou CNS"
+                autocomplete="username"
                 [attr.aria-invalid]="isFieldInvalid('email')"
                 [attr.aria-describedby]="isFieldInvalid('email') ? 'email-error' : null"
                 class="w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
@@ -55,17 +55,17 @@ import { LucideAngularModule, Lock, Mail, Eye, EyeOff } from 'lucide-angular';
               />
               @if (isFieldInvalid('email')) {
                 <p id="email-error" class="mt-1 text-sm text-error" role="alert">
-                  Email é obrigatório
+                  Email, CPF ou CNS é obrigatório
                 </p>
               }
             </div>
 
-            <!-- Senha -->
+            <!-- Senha ou Data de Nascimento -->
             <div class="mb-6">
               <label for="password" class="block text-sm font-semibold text-gray-700 mb-2">
                 <span class="flex items-center gap-2">
                   <lucide-icon [img]="Lock" class="w-4 h-4" aria-hidden="true" />
-                  Senha
+                  Senha ou Data de Nascimento
                 </span>
               </label>
               <div class="relative">
@@ -73,7 +73,7 @@ import { LucideAngularModule, Lock, Mail, Eye, EyeOff } from 'lucide-angular';
                   id="password"
                   [type]="showPassword() ? 'text' : 'password'"
                   formControlName="password"
-                  placeholder="••••••••"
+                  placeholder="senha ou data (DD/MM/AAAA)"
                   autocomplete="current-password"
                   [attr.aria-invalid]="isFieldInvalid('password')"
                   [attr.aria-describedby]="isFieldInvalid('password') ? 'password-error' : null"
@@ -182,8 +182,8 @@ export class LoginComponent {
     }
 
     this.loginForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]]
+      email: ['', [Validators.required]], // Aceita email, CPF ou CNS
+      password: ['', [Validators.required]] // Aceita senha ou data de nascimento
     });
   }
 
@@ -206,7 +206,22 @@ export class LoginComponent {
     this.errorMessage.set('');
 
     try {
-      await this.authService.login(this.loginForm.value);
+      const username = this.loginForm.value.email.trim();
+      const password = this.loginForm.value.password.trim();
+      
+      // Detectar se é CPF/CNS (apenas números) ou email (contém @)
+      const isCpfOuCns = /^\d+$/.test(username.replace(/\D/g, ''));
+      
+      if (isCpfOuCns) {
+        // Login de paciente com CPF/CNS e data de nascimento
+        await this.authService.loginPaciente(username, password);
+      } else {
+        // Login normal com email e senha
+        await this.authService.login({
+          email: username,
+          password: password
+        });
+      }
       
       // Verificar se há URL de retorno
       const returnUrl = this.route.snapshot.queryParams['returnUrl'];
@@ -215,7 +230,7 @@ export class LoginComponent {
       }
       // Caso contrário, o AuthService já redireciona baseado no role
     } catch (error: any) {
-      this.errorMessage.set(error.message || 'Erro ao fazer login');
+      this.errorMessage.set(error.message || 'Credenciais inválidas');
     } finally {
       this.isLoading.set(false);
     }

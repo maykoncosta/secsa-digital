@@ -383,9 +383,13 @@ export class ExameRealizadoFormModalComponent implements OnInit {
         dataColeta: dataColeta,
         dataCadastro: Timestamp.now(),
         resultados: {},
-        cadastradoPor: 'current-user-id', // TODO: Pegar do auth
-        observacoesTecnicas: formValue.observacoesTecnicas || undefined
+        cadastradoPor: 'current-user-id' // TODO: Pegar do auth
       };
+
+      // Adicionar observações técnicas apenas se houver valor
+      if (formValue.observacoesTecnicas && formValue.observacoesTecnicas.trim()) {
+        exameData.observacoesTecnicas = formValue.observacoesTecnicas.trim();
+      }
 
       if (this.exameToEdit()) {
         await this.exameRepository.update(this.exameToEdit()!.uid, exameData);

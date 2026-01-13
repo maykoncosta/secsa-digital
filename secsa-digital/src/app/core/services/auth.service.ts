@@ -92,8 +92,10 @@ export class AuthService {
         role: data['role'] as UserRole,
         photoURL: data['photoURL'],
         cpf: data['cpf'],
+        cns: data['cns'],
         dataNascimento: data['dataNascimento']?.toDate(),
         telefone: data['telefone'],
+        pacienteId: data['pacienteId'], // Vínculo com a collection pacientes
         active: data['active'] ?? true,
         createdAt: data['createdAt']?.toDate() || new Date(),
         updatedAt: data['updatedAt']?.toDate() || new Date(),
@@ -147,6 +149,79 @@ export class AuthService {
     } catch (error: any) {
       console.error('Erro no login:', error);
       this.handleAuthError(error);
+      throw error;
+    } finally {
+      this.loadingSignal.set(false);
+    }
+  }
+
+  /**
+   * Login de paciente com CPF/CNS e data de nascimento
+   * Converte CPF/CNS para email virtual antes de fazer login
+   * Aceita data em vários formatos: DDMMAAAA, DD/MM/AAAA, DD-MM-AAAA, AAAA-MM-DD
+   */
+  async loginPaciente(cpfOuCns: string, dataNascimento: string): Promise<void> {
+    try {
+      this.loadingSignal.set(true);
+      
+      // Remover formatação do CPF/CNS
+      const documentoLimpo = cpfOuCns.replace(/\D/g, '');
+      
+      // Gerar email virtual
+      const email = `paciente_${documentoLimpo}@secsa.local`;
+      
+      // Converter data de nascimento para senha (DDMMAAAA)
+      let senha = '';
+      
+      // Remover qualquer formatação da data
+      const dataLimpa = dataNascimento.replace(/\D/g, '');
+      
+      if (dataLimpa.length === 8) {
+        // Se já está no formato DDMMAAAA ou AAAAMMDD
+        // Tentar detectar qual é
+        const primeirosDois = parseInt(dataLimpa.substring(0, 2));
+        
+        if (primeirosDois > 31) {
+          // Provavelmente AAAAMMDD, converter para DDMMAAAA
+          const ano = dataLimpa.substring(0, 4);
+          const mes = dataLimpa.substring(4, 6);
+          const dia = dataLimpa.substring(6, 8);
+          senha = `${dia}${mes}${ano}`;
+        } else {
+          // Já está em DDMMAAAA
+          senha = dataLimpa;
+        }
+      } else if (dataNascimento.includes('-')) {
+        // Formato AAAA-MM-DD
+        const [ano, mes, dia] = dataNascimento.split('-');
+        senha = `${dia}${mes}${ano}`;
+      } else if (dataNascimento.includes('/')) {
+        // Formato DD/MM/AAAA
+        const [dia, mes, ano] = dataNascimento.split('/');
+        senha = `${dia}${mes}${ano}`;
+      } else {
+        throw new Error('Formato de data inválido');
+      }
+      
+      console.log('🔐 Login de paciente:', { 
+        documento: documentoLimpo, 
+        email,
+        senhaGerada: senha
+      });
+      
+      console.log('📧 Email e senha que serão usados no login:');
+      console.log('  Email:', email);
+      console.log('  Senha:', senha);
+      
+      // Fazer login com email virtual e senha
+      await this.login({
+        email,
+        password: senha
+      });
+      
+    } catch (error: any) {
+      console.error('Erro no login do paciente:', error);
+      this.toastService.error('CPF/CNS ou data de nascimento incorretos');
       throw error;
     } finally {
       this.loadingSignal.set(false);

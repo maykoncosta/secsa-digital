@@ -6,7 +6,8 @@ import { ButtonComponent } from '../../shared/components/button.component';
 import { InputComponent } from '../../shared/components/input.component';
 import { AuthService } from '../../core/services/auth.service';
 import { ToastService } from '../../core/services/toast.service';
-import { LucideAngularModule, Settings, Users, Database, Shield, Bell, Palette } from 'lucide-angular';
+import { LucideAngularModule, Settings, Users, Bell, Palette, Building2 } from 'lucide-angular';
+import { Firestore, doc, getDoc, setDoc } from '@angular/fire/firestore';
 
 @Component({
   selector: 'app-configuracoes',
@@ -26,6 +27,19 @@ import { LucideAngularModule, Settings, Users, Database, Shield, Bell, Palette }
       <div class="space-y-6">
         <!-- Seções de Configuração -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Instituição -->
+          <button
+            type="button"
+            (click)="activeSection.set('instituicao')"
+            [class.ring-2]="activeSection() === 'instituicao'"
+            [class.ring-primary]="activeSection() === 'instituicao'"
+            class="bg-white rounded-lg shadow-sm p-6 text-left hover:shadow-md transition-shadow focus:outline-none focus:ring-2 focus:ring-primary/30"
+          >
+            <lucide-icon [img]="Building2" class="w-8 h-8 text-primary mb-3" aria-hidden="true" />
+            <h3 class="text-lg font-semibold text-gray-900 mb-2">Instituição</h3>
+            <p class="text-sm text-gray-600">Dados da instituição</p>
+          </button>
+          
           <!-- Gerenciar Usuários -->
           <button
             type="button"
@@ -37,32 +51,6 @@ import { LucideAngularModule, Settings, Users, Database, Shield, Bell, Palette }
             <lucide-icon [img]="Users" class="w-8 h-8 text-primary mb-3" aria-hidden="true" />
             <h3 class="text-lg font-semibold text-gray-900 mb-2">Usuários</h3>
             <p class="text-sm text-gray-600">Gerenciar usuários do sistema</p>
-          </button>
-
-          <!-- Banco de Dados -->
-          <button
-            type="button"
-            (click)="activeSection.set('database')"
-            [class.ring-2]="activeSection() === 'database'"
-            [class.ring-primary]="activeSection() === 'database'"
-            class="bg-white rounded-lg shadow-sm p-6 text-left hover:shadow-md transition-shadow focus:outline-none focus:ring-2 focus:ring-primary/30"
-          >
-            <lucide-icon [img]="Database" class="w-8 h-8 text-primary mb-3" aria-hidden="true" />
-            <h3 class="text-lg font-semibold text-gray-900 mb-2">Banco de Dados</h3>
-            <p class="text-sm text-gray-600">Backup e manutenção</p>
-          </button>
-
-          <!-- Segurança -->
-          <button
-            type="button"
-            (click)="activeSection.set('seguranca')"
-            [class.ring-2]="activeSection() === 'seguranca'"
-            [class.ring-primary]="activeSection() === 'seguranca'"
-            class="bg-white rounded-lg shadow-sm p-6 text-left hover:shadow-md transition-shadow focus:outline-none focus:ring-2 focus:ring-primary/30"
-          >
-            <lucide-icon [img]="Shield" class="w-8 h-8 text-primary mb-3" aria-hidden="true" />
-            <h3 class="text-lg font-semibold text-gray-900 mb-2">Segurança</h3>
-            <p class="text-sm text-gray-600">Configurações de segurança</p>
           </button>
 
           <!-- Notificações -->
@@ -108,6 +96,102 @@ import { LucideAngularModule, Settings, Users, Database, Shield, Bell, Palette }
         <!-- Conteúdo da Seção Ativa -->
         <div class="bg-white rounded-lg shadow-sm p-6">
           @switch (activeSection()) {
+            @case ('instituicao') {
+              <div>
+                <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <lucide-icon [img]="Building2" class="w-6 h-6 text-primary" aria-hidden="true" />
+                  Dados da Instituição
+                </h2>
+                <p class="text-gray-600 mb-6">
+                  Configure as informações da sua instituição que serão exibidas nos laudos e relatórios.
+                </p>
+                
+                <form [formGroup]="instituicaoForm" (ngSubmit)="salvarInstituicao()" class="space-y-6 max-w-3xl">
+                  <div class="space-y-4">
+                    <app-input
+                      [id]="'nomeInstituicao'"
+                      [label]="'Nome da Instituição'"
+                      [type]="'text'"
+                      [placeholder]="'Ex: Laboratório SECSA'"
+                      formControlName="nome"
+                      [required]="true"
+                    />
+                    
+                    <app-input
+                      [id]="'cnpj'"
+                      [label]="'CNPJ'"
+                      [type]="'text'"
+                      [placeholder]="'00.000.000/0000-00'"
+                      formControlName="cnpj"
+                    />
+                    
+                    <app-input
+                      [id]="'endereco'"
+                      [label]="'Endereço Completo'"
+                      [type]="'text'"
+                      [placeholder]="'Rua, Número, Bairro, Cidade - UF, CEP'"
+                      formControlName="endereco"
+                    />
+                    
+                    <app-input
+                      [id]="'telefone'"
+                      [label]="'Telefone'"
+                      [type]="'text'"
+                      [placeholder]="'(00) 0000-0000'"
+                      formControlName="telefone"
+                    />
+                    
+                    <app-input
+                      [id]="'email'"
+                      [label]="'E-mail'"
+                      [type]="'email'"
+                      [placeholder]="'contato@laboratorio.com.br'"
+                      formControlName="email"
+                    />
+                    
+                    <div>
+                      <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Logo da Instituição
+                      </label>
+                      <div class="flex items-center gap-4">
+                        @if (logoPreview()) {
+                          <img [src]="logoPreview()" alt="Logo" class="h-20 w-20 object-contain border rounded" />
+                        }
+                        <div class="flex-1">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            (change)="onLogoChange($event)"
+                            class="block w-full text-sm text-gray-500
+                              file:mr-4 file:py-2 file:px-4
+                              file:rounded-lg file:border-0
+                              file:text-sm file:font-semibold
+                              file:bg-primary file:text-white
+                              hover:file:bg-primary-dark
+                              file:cursor-pointer cursor-pointer"
+                          />
+                          <p class="mt-1 text-xs text-gray-500">
+                            PNG, JPG ou SVG (máx. 2MB)
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="flex gap-3 pt-4 border-t">
+                    <app-button
+                      type="submit"
+                      variant="primary"
+                      [loading]="salvandoInstituicao()"
+                      [disabled]="instituicaoForm.invalid || salvandoInstituicao()"
+                    >
+                      {{ salvandoInstituicao() ? 'Salvando...' : 'Salvar Configurações' }}
+                    </app-button>
+                  </div>
+                </form>
+              </div>
+            }
+            
             @case ('usuarios') {
               <div>
                 <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -199,36 +283,6 @@ import { LucideAngularModule, Settings, Users, Database, Shield, Bell, Palette }
               </div>
             }
 
-            @case ('database') {
-              <div>
-                <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <lucide-icon [img]="Database" class="w-6 h-6 text-primary" aria-hidden="true" />
-                  Banco de Dados
-                </h2>
-                <p class="text-gray-600 mb-6">
-                  Ferramentas de manutenção e backup do banco de dados.
-                </p>
-                <div class="text-center py-8">
-                  <p class="text-gray-500">Funcionalidade em desenvolvimento</p>
-                </div>
-              </div>
-            }
-
-            @case ('seguranca') {
-              <div>
-                <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <lucide-icon [img]="Shield" class="w-6 h-6 text-primary" aria-hidden="true" />
-                  Segurança
-                </h2>
-                <p class="text-gray-600 mb-6">
-                  Configure políticas de segurança e permissões.
-                </p>
-                <div class="text-center py-8">
-                  <p class="text-gray-500">Funcionalidade em desenvolvimento</p>
-                </div>
-              </div>
-            }
-
             @case ('notificacoes') {
               <div>
                 <h2 class="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -304,24 +358,28 @@ export class ConfiguracoesComponent {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private toastService = inject(ToastService);
+  private firestore = inject(Firestore);
 
   // Icons
   Settings = Settings;
   Users = Users;
-  Database = Database;
-  Shield = Shield;
   Bell = Bell;
   Palette = Palette;
+  Building2 = Building2;
 
   // Signals
-  activeSection = signal<string>('usuarios');
+  activeSection = signal<string>('instituicao');
   savingUser = signal(false);
+  salvandoInstituicao = signal(false);
+  logoPreview = signal<string | null>(null);
 
   // Data
   currentUser = this.authService.currentUser;
 
-  // Form
+  // Forms
   userForm: FormGroup;
+  instituicaoForm: FormGroup;
+  logoFile: File | null = null;
 
   constructor() {
     this.userForm = this.fb.group({
@@ -330,6 +388,16 @@ export class ConfiguracoesComponent {
       password: ['', [Validators.required, Validators.minLength(6)]],
       role: ['', Validators.required]
     });
+
+    this.instituicaoForm = this.fb.group({
+      nome: ['', Validators.required],
+      cnpj: [''],
+      endereco: [''],
+      telefone: [''],
+      email: ['', Validators.email]
+    });
+
+    this.carregarDadosInstituicao();
   }
 
   isFieldInvalid(fieldName: string): boolean {
@@ -371,6 +439,97 @@ export class ConfiguracoesComponent {
       // O AuthService já exibe o toast de erro
     } finally {
       this.savingUser.set(false);
+    }
+  }
+
+  async carregarDadosInstituicao(): Promise<void> {
+    try {
+      const configDoc = await getDoc(doc(this.firestore, 'configuracoes', 'instituicao'));
+      
+      if (configDoc.exists()) {
+        const data = configDoc.data();
+        this.instituicaoForm.patchValue({
+          nome: data['nome'] || '',
+          cnpj: data['cnpj'] || '',
+          endereco: data['endereco'] || '',
+          telefone: data['telefone'] || '',
+          email: data['email'] || ''
+        });
+        
+        if (data['logoUrl']) {
+          this.logoPreview.set(data['logoUrl']);
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao carregar dados da instituição:', error);
+    }
+  }
+
+  onLogoChange(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      
+      // Validar tamanho (2MB)
+      if (file.size > 2 * 1024 * 1024) {
+        this.toastService.error('A imagem deve ter no máximo 2MB');
+        return;
+      }
+      
+      // Validar tipo
+      if (!file.type.startsWith('image/')) {
+        this.toastService.error('Apenas imagens são permitidas');
+        return;
+      }
+      
+      this.logoFile = file;
+      
+      // Preview
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.logoPreview.set(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  async salvarInstituicao(): Promise<void> {
+    if (this.instituicaoForm.invalid) {
+      this.instituicaoForm.markAllAsTouched();
+      this.toastService.error('Preencha todos os campos obrigatórios');
+      return;
+    }
+
+    this.salvandoInstituicao.set(true);
+
+    try {
+      const dados: any = {
+        ...this.instituicaoForm.value,
+        updatedAt: new Date()
+      };
+      
+      // Se houver logo, converter para base64 e salvar
+      if (this.logoFile) {
+        const reader = new FileReader();
+        const logoBase64 = await new Promise<string>((resolve) => {
+          reader.onload = (e) => resolve(e.target?.result as string);
+          reader.readAsDataURL(this.logoFile!);
+        });
+        dados.logoUrl = logoBase64;
+      } else if (this.logoPreview()) {
+        dados.logoUrl = this.logoPreview();
+      }
+      
+      await setDoc(doc(this.firestore, 'configuracoes', 'instituicao'), dados);
+      
+      this.toastService.success('Configurações salvas com sucesso!');
+      this.logoFile = null;
+      
+    } catch (error) {
+      console.error('Erro ao salvar configurações:', error);
+      this.toastService.error('Erro ao salvar configurações');
+    } finally {
+      this.salvandoInstituicao.set(false);
     }
   }
 }

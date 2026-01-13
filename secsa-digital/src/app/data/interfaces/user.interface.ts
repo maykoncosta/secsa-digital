@@ -11,8 +11,10 @@ export interface AppUser {
   
   // Campos específicos para paciente
   cpf?: string;
+  cns?: string;
   dataNascimento?: Date;
   telefone?: string;
+  pacienteId?: string; // Vínculo com a collection pacientes
   
   // Campos de auditoria
   active: boolean;

@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { FirestoreService } from '../../core/services/firestore.service';
+import { PacienteUserService } from '../../core/services/paciente-user.service';
 import { Paciente } from '../interfaces/paciente.interface';
 import { Observable } from 'rxjs';
 import { where, Timestamp, orderBy, limit, startAfter, QueryConstraint } from '@angular/fire/firestore';
@@ -16,7 +17,10 @@ export class PacienteRepository {
   private cacheTimestamp: number | null = null;
   private readonly CACHE_DURATION = 300000; // 5 minutos
 
-  constructor(private firestoreService: FirestoreService) {}
+  constructor(
+    private firestoreService: FirestoreService,
+    private pacienteUserService: PacienteUserService
+  ) {}
 
   /**
    * Busca todos os pacientes ativos
@@ -56,21 +60,36 @@ export class PacienteRepository {
   }
 
   /**
-   * Adiciona um novo paciente
+   * Adiciona um novo paciente e cria usuário automaticamente
    */
-  async add(paciente: Omit<Paciente, 'id'>): Promise<void> {
+  async add(paciente: Omit<Paciente, 'id'>): Promise<string> {
     const now = Timestamp.now();
     const data = {
       ...paciente,
       criadoEm: now,
       atualizadoEm: now
     };
-    await this.firestoreService.addDocument(this.COLLECTION, data);
+    
+    // Adicionar paciente no Firestore
+    const docRef = await this.firestoreService.addDocument(this.COLLECTION, data);
+    const pacienteId = docRef.id;
+    
+    // Criar usuário automaticamente para o paciente
+    try {
+      const pacienteCompleto = { ...data, id: pacienteId } as Paciente;
+      await this.pacienteUserService.criarUsuarioParaPaciente(pacienteCompleto, pacienteId);
+      console.log('✅ Paciente e usuário criados com sucesso!');
+    } catch (error) {
+      console.error('⚠️ Paciente criado, mas erro ao criar usuário:', error);
+      // Não lançar erro - o paciente foi criado, o usuário pode ser criado depois
+    }
+    
     this.invalidateCache();
+    return pacienteId;
   }
 
   /**
-   * Atualiza um paciente existente
+   * Atualiza um paciente existente e sincroniza com o usuário
    */
   async update(id: string, paciente: Partial<Paciente>): Promise<void> {
     const data = {
@@ -78,21 +97,44 @@ export class PacienteRepository {
       atualizadoEm: Timestamp.now()
     };
     await this.firestoreService.updateDocument(this.COLLECTION, id, data);
+    
+    // Atualizar usuário vinculado
+    try {
+      await this.pacienteUserService.atualizarUsuarioPaciente(id, paciente);
+    } catch (error) {
+      console.error('⚠️ Erro ao sincronizar usuário:', error);
+    }
   }
 
   /**
-   * Inativa um paciente (soft delete)
+   * Inativa um paciente (soft delete) e seu usuário
    */
   async inactivate(id: string): Promise<void> {
     await this.update(id, { status: 'inativo' });
+    
+    // Inativar usuário vinculado
+    try {
+      await this.pacienteUserService.inativarUsuarioPaciente(id);
+    } catch (error) {
+      console.error('⚠️ Erro ao inativar usuário:', error);
+    }
+    
     this.invalidateCache();
   }
 
   /**
-   * Ativa um paciente
+   * Ativa um paciente e seu usuário
    */
   async activate(id: string): Promise<void> {
     await this.update(id, { status: 'ativo' });
+    
+    // Ativar usuário vinculado
+    try {
+      await this.pacienteUserService.ativarUsuarioPaciente(id);
+    } catch (error) {
+      console.error('⚠️ Erro ao ativar usuário:', error);
+    }
+    
     this.invalidateCache();
   }
 

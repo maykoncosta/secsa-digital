@@ -3,84 +3,144 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { ExameRealizado, SchemaExame, FaixaReferencia } from '../../data/interfaces/exame.interface';
 import { FaixaReferenciaService } from './faixa-referencia.service';
+import { Firestore, doc, getDoc } from '@angular/fire/firestore';
+
+interface ConfiguracaoInstituicao {
+  nome: string;
+  cnpj?: string;
+  endereco?: string;
+  telefone?: string;
+  email?: string;
+  logoUrl?: string;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class PdfLaudoService {
   private faixaReferenciaService = inject(FaixaReferenciaService);
+  private firestore = inject(Firestore);
+  private configInstituicao: ConfiguracaoInstituicao | null = null;
 
-  gerarLaudo(exame: ExameRealizado, schema: SchemaExame): void {
+  async gerarLaudo(exame: ExameRealizado, schema: SchemaExame): Promise<void> {
+    // Carregar configurações da instituição
+    await this.carregarConfigInstituicao();
+    
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const margin = 15;
-    let yPosition = 20;
+    let yPosition = 12;
 
     // Calcular faixas de referência para o paciente
     const faixasPorParametro = this.calcularFaixasPaciente(schema, exame);
 
-    // Cabeçalho
-    doc.setFontSize(18);
-    doc.setFont('helvetica', 'bold');
-    doc.text('LAUDO DE EXAME LABORATORIAL', pageWidth / 2, yPosition, { align: 'center' });
+    // Logo ao lado do nome da instituição (se existir)
+    const logoSize = 20;
+    let xTextoInicio = margin;
     
-    yPosition += 10;
-    doc.setFontSize(10);
+    if (this.configInstituicao?.logoUrl) {
+      try {
+        // Logo à esquerda
+        doc.addImage(
+          this.configInstituicao.logoUrl, 
+          'PNG', 
+          margin, 
+          yPosition, 
+          logoSize, 
+          logoSize
+        );
+        // Texto começa após a logo
+        xTextoInicio = margin + logoSize + 5;
+      } catch (error) {
+        console.error('Erro ao adicionar logo ao PDF:', error);
+      }
+    }
+
+    // Nome da instituição ao lado da logo
+    const nomeInstituicao = this.configInstituicao?.nome || 'SECSA DIGITAL';
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text(nomeInstituicao, xTextoInicio, yPosition + 6);
+    
+    yPosition += 8;
+    doc.setFontSize(14);
+    doc.text('LAUDO DE EXAME LABORATORIAL', xTextoInicio, yPosition + 6);
+    
+    yPosition += logoSize;
+    doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
-    doc.text('SECSA DIGITAL - Laboratório de Análises Clínicas', pageWidth / 2, yPosition, { align: 'center' });
+    
+    // Dados da instituição em uma linha compacta (centralizado)
+    const infoInstituicao = [];
+    if (this.configInstituicao?.endereco) infoInstituicao.push(this.configInstituicao.endereco);
+    if (this.configInstituicao?.telefone) infoInstituicao.push(`Tel: ${this.configInstituicao.telefone}`);
+    if (this.configInstituicao?.email) infoInstituicao.push(this.configInstituicao.email);
+    if (this.configInstituicao?.cnpj) infoInstituicao.push(`CNPJ: ${this.configInstituicao.cnpj}`);
+    
+    if (infoInstituicao.length > 0) {
+      doc.text(infoInstituicao.join(' | '), pageWidth / 2, yPosition, { align: 'center' });
+      yPosition += 4;
+    }
     
     // Linha separadora
-    yPosition += 5;
+    yPosition += 2;
     doc.setLineWidth(0.5);
     doc.line(margin, yPosition, pageWidth - margin, yPosition);
-    yPosition += 10;
+    yPosition += 8;
 
-    // Informações do Paciente
-    doc.setFontSize(12);
+    // Informações lado a lado: Paciente (esquerda) e Exame (direita)
+    const metadeLargura = (pageWidth - 2 * margin) / 2;
+    const yInicioDados = yPosition;
+    
+    // COLUNA ESQUERDA - Dados do Paciente
+    doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
     doc.text('DADOS DO PACIENTE', margin, yPosition);
-    yPosition += 7;
+    yPosition += 6;
 
-    doc.setFontSize(10);
+    doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
     
     const dadosPaciente = [
       `Nome: ${exame.paciente.nome}`,
       `CPF: ${exame.paciente.cpf}`,
-      `Idade: ${exame.paciente.idadeNaData} anos`,
       `Sexo: ${exame.paciente.sexo === 'M' ? 'Masculino' : 'Feminino'}`,
-      `Data de Nascimento: ${this.formatDateSimple(exame.paciente.dataNascimento)}`
+      `Idade: ${exame.paciente.idadeNaData} anos`,
+      `Nasc.: ${this.formatDateSimple(exame.paciente.dataNascimento)}`
     ];
 
     dadosPaciente.forEach(linha => {
       doc.text(linha, margin, yPosition);
-      yPosition += 5;
+      yPosition += 4.5;
     });
 
-    yPosition += 3;
-
-    // Informações do Exame
-    doc.setFontSize(12);
+    // COLUNA DIREITA - Dados do Exame
+    let yExame = yInicioDados;
+    const xExame = margin + metadeLargura + 5;
+    
+    doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
-    doc.text('DADOS DO EXAME', margin, yPosition);
-    yPosition += 7;
+    doc.text('DADOS DO EXAME', xExame, yExame);
+    yExame += 6;
 
-    doc.setFontSize(10);
+    doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
     
     const dadosExame = [
       `Exame: ${schema.nome}`,
-      `Data da Coleta: ${this.formatDateComplete(exame.dataColeta)}`,
-      `Data de Cadastro: ${this.formatDateComplete(exame.dataCadastro)}`,
-      `Data de Finalização: ${exame.dataFinalizacao ? this.formatDateComplete(exame.dataFinalizacao) : '-'}`
+      `Coleta: ${this.formatDateComplete(exame.dataColeta)}`,
+      `Cadastro: ${this.formatDateComplete(exame.dataCadastro)}`,
+      `Finalização: ${exame.dataFinalizacao ? this.formatDateComplete(exame.dataFinalizacao) : '-'}`,
+      `Status: ${exame.status.toUpperCase()}`
     ];
 
     dadosExame.forEach(linha => {
-      doc.text(linha, margin, yPosition);
-      yPosition += 5;
+      doc.text(linha, xExame, yExame);
+      yExame += 4.5;
     });
 
-    yPosition += 5;
+    // Ajustar yPosition para o maior valor entre as duas colunas
+    yPosition = Math.max(yPosition, yExame) + 5;
 
     // Resultados por Grupo
     const grupos = this.getGruposParametros(schema);
@@ -227,6 +287,40 @@ export class PdfLaudoService {
     // Gerar PDF
     const fileName = `Laudo_${exame.schemaNome.replace(/\s+/g, '_')}_${exame.paciente.nome.replace(/\s+/g, '_')}_${this.formatDateFile(exame.dataColeta)}.pdf`;
     doc.save(fileName);
+  }
+
+  private async carregarConfigInstituicao(): Promise<void> {
+    // Se já carregou, não precisa carregar novamente
+    if (this.configInstituicao) {
+      return;
+    }
+
+    try {
+      const configDoc = await getDoc(doc(this.firestore, 'configuracoes', 'instituicao'));
+      
+      if (configDoc.exists()) {
+        const data = configDoc.data();
+        this.configInstituicao = {
+          nome: data['nome'] || 'SECSA DIGITAL',
+          cnpj: data['cnpj'],
+          endereco: data['endereco'],
+          telefone: data['telefone'],
+          email: data['email'],
+          logoUrl: data['logoUrl']
+        };
+      } else {
+        // Configuração padrão
+        this.configInstituicao = {
+          nome: 'SECSA DIGITAL'
+        };
+      }
+    } catch (error) {
+      console.error('Erro ao carregar configurações da instituição:', error);
+      // Usar configuração padrão em caso de erro
+      this.configInstituicao = {
+        nome: 'SECSA DIGITAL'
+      };
+    }
   }
 
   private getGruposParametros(schema: SchemaExame): string[] {

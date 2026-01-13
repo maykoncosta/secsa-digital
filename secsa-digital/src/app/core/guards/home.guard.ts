@@ -6,19 +6,16 @@ import { AuthService } from '../services/auth.service';
  * Guard para rota raiz '/'
  * Redireciona para a página apropriada baseado no estado de autenticação e role
  */
-export const homeGuard: CanActivateFn = () => {
+export const homeGuard: CanActivateFn = async () => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  // Aguardar carregamento do estado de autenticação
-  if (authService.isLoading()) {
-    return false;
-  }
+  // Aguardar um pouco para o auth state carregar
+  await new Promise(resolve => setTimeout(resolve, 100));
 
   // Se não está autenticado, redirecionar para login
   if (!authService.isAuthenticated()) {
-    router.navigate(['/login']);
-    return false;
+    return router.parseUrl('/login');
   }
 
   // Redirecionar baseado no role
@@ -26,14 +23,10 @@ export const homeGuard: CanActivateFn = () => {
   switch (role) {
     case 'admin':
     case 'funcionario':
-      router.navigate(['/dashboard']);
-      break;
+      return router.parseUrl('/dashboard');
     case 'paciente':
-      router.navigate(['/meus-exames']);
-      break;
+      return router.parseUrl('/meus-exames');
     default:
-      router.navigate(['/login']);
+      return router.parseUrl('/login');
   }
-
-  return false;
 };

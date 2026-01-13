@@ -8,10 +8,15 @@ import { ToastService } from '../services/toast.service';
  * Guard para controlar acesso baseado em roles de usuário
  * Usa: canActivate: [roleGuard], data: { roles: ['admin', 'funcionario'] }
  */
-export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
+export const roleGuard: CanActivateFn = async (route: ActivatedRouteSnapshot) => {
   const authService = inject(AuthService);
   const router = inject(Router);
   const toastService = inject(ToastService);
+
+  // Aguardar o carregamento inicial do estado de autenticação
+  while (authService.isLoading()) {
+    await new Promise(resolve => setTimeout(resolve, 50));
+  }
 
   const allowedRoles = route.data['roles'] as UserRole[] | undefined;
 
@@ -31,12 +36,10 @@ export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
   // Redirecionar baseado no role do usuário
   const userRole = authService.userRole();
   if (userRole === 'paciente') {
-    router.navigate(['/meus-exames']);
+    return router.createUrlTree(['/meus-exames']);
   } else if (userRole === 'admin' || userRole === 'funcionario') {
-    router.navigate(['/dashboard']);
+    return router.createUrlTree(['/dashboard']);
   } else {
-    router.navigate(['/']);
+    return router.createUrlTree(['/']);
   }
-
-  return false;
 };

@@ -270,3 +270,127 @@ async function recalcularEstatisticas() {
     topExames: topExamesMap.size,
   };
 }
+
+/**
+ * Cloud Function para criar usuário de paciente
+ * Usa Admin SDK para não fazer login automático
+ */
+export const criarUsuarioPaciente = functions.https.onCall(async (data, context) => {
+  try {
+    // Validar autenticação
+    if (!context.auth) {
+      throw new functions.https.HttpsError(
+        'unauthenticated',
+        'Usuário não autenticado'
+      );
+    }
+
+    // Validar role (apenas admin e funcionário podem criar)
+    const userDoc = await db.collection('users').doc(context.auth.uid).get();
+    const userData = userDoc.data();
+    
+    if (!userData || !['admin', 'funcionario'].includes(userData.role)) {
+      throw new functions.https.HttpsError(
+        'permission-denied',
+        'Sem permissão para criar usuários'
+      );
+    }
+
+    const { paciente, pacienteId } = data;
+
+    // Validar dados
+    if (!paciente || !pacienteId) {
+      throw new functions.https.HttpsError(
+        'invalid-argument',
+        'Dados do paciente são obrigatórios'
+      );
+    }
+
+    // Determinar qual documento usar (CPF tem prioridade)
+    const documento = paciente.cpf || paciente.cns;
+    if (!documento) {
+      throw new functions.https.HttpsError(
+        'invalid-argument',
+        'Paciente deve ter CPF ou CNS'
+      );
+    }
+
+    // Gerar email virtual
+    const documentoLimpo = documento.replace(/\D/g, '');
+    const email = `paciente_${documentoLimpo}@secsa.local`;
+
+    // Gerar senha baseada na data de nascimento (DDMMAAAA)
+    const dataNasc = new Date(paciente.dataNascimento);
+    const ano = dataNasc.getFullYear();
+    const mes = String(dataNasc.getMonth() + 1).padStart(2, '0');
+    const dia = String(dataNasc.getDate()).padStart(2, '0');
+    const senha = `${dia}${mes}${ano}`;
+
+    console.log('📧 Criando usuário para paciente:', {
+      email,
+      pacienteId,
+      documento: documentoLimpo
+    });
+
+    // Criar usuário no Firebase Authentication (Admin SDK não faz login)
+    const userRecord = await admin.auth().createUser({
+      email,
+      password: senha,
+      displayName: paciente.nomeCompleto,
+    });
+
+    const uid = userRecord.uid;
+
+    // Criar documento na collection users
+    const userData: any = {
+      email,
+      displayName: paciente.nomeCompleto,
+      role: 'paciente',
+      pacienteId: pacienteId,
+      active: true,
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    };
+
+    // Adicionar campos opcionais
+    if (paciente.cpf) userData.cpf = paciente.cpf;
+    if (paciente.cns) userData.cns = paciente.cns;
+    if (paciente.dataNascimento) {
+      userData.dataNascimento = admin.firestore.Timestamp.fromDate(
+        new Date(paciente.dataNascimento)
+      );
+    }
+    if (paciente.telefone) userData.telefone = paciente.telefone;
+
+    await db.collection('users').doc(uid).set(userData);
+
+    console.log('✅ Usuário criado com sucesso!', {
+      uid,
+      email,
+      pacienteId
+    });
+
+    return {
+      success: true,
+      uid,
+      email
+    };
+
+  } catch (error: any) {
+    console.error('❌ Erro ao criar usuário para paciente:', error);
+    
+    // Se o email já existe, retornar sucesso
+    if (error.code === 'auth/email-already-exists') {
+      console.log('ℹ️ Usuário já existe para este paciente');
+      return {
+        success: true,
+        message: 'Usuário já existe'
+      };
+    }
+
+    throw new functions.https.HttpsError(
+      'internal',
+      `Erro ao criar usuário: ${error.message}`
+    );
+  }
+});

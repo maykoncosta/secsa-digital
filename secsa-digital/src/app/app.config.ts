@@ -3,6 +3,7 @@ import { provideRouter } from '@angular/router';
 import { provideFirebaseApp, initializeApp } from '@angular/fire/app';
 import { provideAuth, getAuth } from '@angular/fire/auth';
 import { provideFirestore, getFirestore } from '@angular/fire/firestore';
+import { provideFunctions, getFunctions } from '@angular/fire/functions';
 import { environment } from '../environments/environment';
 import { GlobalErrorHandlerService } from './core/services/error-handler.service';
 import * as Sentry from '@sentry/angular';
@@ -45,6 +46,7 @@ export const appConfig: ApplicationConfig = {
     provideFirebaseApp(() => initializeApp(environment.firebase)),
     provideAuth(() => getAuth()),
     provideFirestore(() => getFirestore()),
+    provideFunctions(() => getFunctions()),
     { provide: ErrorHandler, useClass: GlobalErrorHandlerService },
     {
       provide: APP_INITIALIZER,

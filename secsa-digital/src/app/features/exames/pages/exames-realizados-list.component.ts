@@ -656,17 +656,17 @@ export class ExamesRealizadosListComponent implements OnInit, OnDestroy {
     this.confirmAction = null;
   }
 
-  imprimirLaudo(exame: ExameRealizado) {
+  async imprimirLaudo(exame: ExameRealizado) {
     // Buscar o schema antes de gerar o PDF
     this.schemaRepository.getById(exame.schemaId).subscribe({
-      next: (schema) => {
+      next: async (schema) => {
         if (!schema) {
           this.toastService.show('Erro: schema do exame não encontrado', 'error');
           return;
         }
 
         try {
-          this.pdfService.gerarLaudo(exame, schema);
+          await this.pdfService.gerarLaudo(exame, schema);
           this.toastService.show('Laudo gerado com sucesso!', 'success');
         } catch (error) {
           console.error('Erro ao gerar PDF:', error);
