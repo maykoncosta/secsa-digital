@@ -17,6 +17,14 @@ export const routes: Routes = [
   {
     path: 'exames',
     loadChildren: () => import('./features/exames/exames.routes').then(m => m.EXAMES_ROUTES)
+  },
+  {
+    path: '404',
+    loadComponent: () => import('./features/not-found/not-found.component').then(m => m.NotFoundComponent)
+  },
+  {
+    path: '**',
+    redirectTo: '/404'
   }
 ];
 
