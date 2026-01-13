@@ -18,6 +18,7 @@ import { SchemaExameRepository } from '../../../data/repositories/schema-exame.r
 import { PacienteRepository } from '../../../data/repositories/paciente.repository';
 import { Paciente } from '../../../data/interfaces/paciente.interface';
 import { PdfLaudoService } from '../../../core/services/pdf-laudo.service';
+import { EtiquetaService } from '../../../core/services/etiqueta.service';
 
 @Component({
   selector: 'app-exames-realizados-list',
@@ -84,13 +85,25 @@ import { PdfLaudoService } from '../../../core/services/pdf-laudo.service';
                 </div>
               </div>
               
-              <app-button
-                variant="primary"
-                (onClick)="openNewExameModal()"
-              >
-                <lucide-icon [img]="Plus" class="w-4 h-4 mr-2" />
-                Novo Exame
-              </app-button>
+              <div class="flex items-center gap-3">
+                @if (examesPendentes().length > 0) {
+                  <app-button
+                    variant="secondary"
+                    (onClick)="imprimirEtiquetasPendentes()"
+                  >
+                    <lucide-icon [img]="Printer" class="w-4 h-4 mr-2" />
+                    Etiquetas ({{ examesPendentes().length }})
+                  </app-button>
+                }
+                
+                <app-button
+                  variant="primary"
+                  (onClick)="openNewExameModal()"
+                >
+                  <lucide-icon [img]="Plus" class="w-4 h-4 mr-2" />
+                  Novo Exame
+                </app-button>
+              </div>
             </div>
             
             <!-- Segunda linha: Filtros detalhados -->
@@ -345,6 +358,7 @@ export class ExamesRealizadosListComponent implements OnInit, OnDestroy {
   private schemaRepository = inject(SchemaExameRepository);
   private pacienteRepository = inject(PacienteRepository);
   private pdfService = inject(PdfLaudoService);
+  private etiquetaService = inject(EtiquetaService);
   private toastService = inject(ToastService);
 
   // Modals
@@ -369,6 +383,11 @@ export class ExamesRealizadosListComponent implements OnInit, OnDestroy {
   exames = signal<ExameRealizado[]>([]);
   filteredExames = signal<ExameRealizado[]>([]);
   loading = signal(true);
+  
+  // Computed para exames pendentes
+  examesPendentes = computed(() => {
+    return this.filteredExames().filter(e => e.status === 'pendente');
+  });
   
   // Autocomplete de Paciente com debounce
   pacienteSearchTerm = '';
@@ -678,5 +697,22 @@ export class ExamesRealizadosListComponent implements OnInit, OnDestroy {
         this.toastService.show('Erro ao carregar dados do exame', 'error');
       }
     });
+  }
+
+  imprimirEtiquetasPendentes() {
+    const pendentes = this.examesPendentes();
+    
+    if (pendentes.length === 0) {
+      this.toastService.show('Nenhum exame pendente para imprimir', 'info');
+      return;
+    }
+
+    try {
+      this.etiquetaService.gerarEtiquetasPendentes(pendentes);
+      this.toastService.show(`${pendentes.length} etiqueta(s) gerada(s) com sucesso`, 'success');
+    } catch (error) {
+      console.error('Erro ao gerar etiquetas:', error);
+      this.toastService.show('Erro ao gerar etiquetas', 'error');
+    }
   }
 }
