@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { LucideAngularModule, Users, FlaskConical, LayoutDashboard, ListChecks, LogOut, Settings, Menu, X } from 'lucide-angular';
 import { AuthService } from '../../core/services/auth.service';
+import { TooltipDirective } from '../directives/tooltip.directive';
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule, LucideAngularModule],
+  imports: [CommonModule, RouterModule, LucideAngularModule, TooltipDirective],
   template: `
     <div class="min-h-screen bg-slate-50">
       <!-- Overlay -->
@@ -37,6 +38,8 @@ import { AuthService } from '../../core/services/auth.service';
             type="button"
             (click)="toggleSidebar()"
             class="text-slate-400 hover:text-white transition-colors p-1 rounded focus:outline-none focus:ring-2 focus:ring-white/30"
+            [appTooltip]="'Fechar menu (Esc)'"
+            tooltipPosition="right"
             aria-label="Fechar menu"
           >
             <lucide-icon [img]="X" class="w-5 h-5" aria-hidden="true" />
@@ -50,8 +53,8 @@ import { AuthService } from '../../core/services/auth.service';
               routerLink="/dashboard"
               routerLinkActive="bg-primary/90 text-white shadow-lg"
               [routerLinkActiveOptions]="{exact: false}"
-              (click)="closeSidebarOnMobile()"
-              class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-700/50 hover:text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-slate-900"
+              (click)="closeSidebarOnMobile()"              [appTooltip]="'Visualizar estatísticas e resumo'"
+              tooltipPosition="right"              class="flex items-center gap-3 px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-700/50 hover:text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-slate-900"
               aria-label="Ir para Dashboard"
             >
               <lucide-icon [img]="LayoutDashboard" class="w-5 h-5 flex-shrink-0" aria-hidden="true" />
@@ -63,6 +66,8 @@ import { AuthService } from '../../core/services/auth.service';
               routerLinkActive="bg-primary/90 text-white shadow-lg"
               [routerLinkActiveOptions]="{exact: false}"
               (click)="closeSidebarOnMobile()"
+              [appTooltip]="'Gerenciar cadastro de pacientes'"
+              tooltipPosition="right"
               class="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-700/50 hover:text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-slate-900"
               aria-label="Ir para Pacientes"
             >
@@ -75,6 +80,8 @@ import { AuthService } from '../../core/services/auth.service';
               routerLinkActive="bg-primary/90 text-white shadow-lg"
               [routerLinkActiveOptions]="{exact: false}"
               (click)="closeSidebarOnMobile()"
+              [appTooltip]="'Configurar modelos de exames'"
+              tooltipPosition="right"
               class="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-700/50 hover:text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-slate-900"
               aria-label="Ir para Schemas de Exames"
             >
@@ -87,6 +94,8 @@ import { AuthService } from '../../core/services/auth.service';
               routerLinkActive="bg-primary/90 text-white shadow-lg"
               [routerLinkActiveOptions]="{exact: false}"
               (click)="closeSidebarOnMobile()"
+              [appTooltip]="'Gerenciar exames realizados'"
+              tooltipPosition="right"
               class="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-700/50 hover:text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-slate-900"
               aria-label="Ir para Exames Realizados"
             >
@@ -100,6 +109,8 @@ import { AuthService } from '../../core/services/auth.service';
                 routerLinkActive="bg-primary/90 text-white shadow-lg"
                 [routerLinkActiveOptions]="{exact: false}"
                 (click)="closeSidebarOnMobile()"
+                [appTooltip]="'Configurações do sistema'"
+                tooltipPosition="right"
                 class="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-700/50 hover:text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-slate-900"
                 aria-label="Ir para Configurações"
               >
@@ -115,6 +126,8 @@ import { AuthService } from '../../core/services/auth.service';
               routerLinkActive="bg-primary/90 text-white shadow-lg"
               [routerLinkActiveOptions]="{exact: false}"
               (click)="closeSidebarOnMobile()"
+              [appTooltip]="'Ver meus exames e resultados'"
+              tooltipPosition="right"
               class="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 rounded-lg text-slate-300 hover:bg-slate-700/50 hover:text-white transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-slate-900"
               aria-label="Ir para Meus Exames"
             >
@@ -142,6 +155,8 @@ import { AuthService } from '../../core/services/auth.service';
           <button
             type="button"
             (click)="onLogout()"
+            [appTooltip]="'Sair do sistema'"
+            tooltipPosition="top"
             class="mt-2 w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-red-400 hover:bg-red-950/30 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-red-500/30 border border-red-900/30 hover:border-red-800/50"
             aria-label="Sair do sistema"
           >
@@ -168,6 +183,8 @@ import { AuthService } from '../../core/services/auth.service';
             <button
               type="button"
               (click)="toggleSidebar()"
+              [appTooltip]="sidebarOpen() ? 'Fechar menu' : 'Abrir menu'"
+              tooltipPosition="bottom"
               class="text-slate-600 hover:text-primary transition-colors p-1.5 sm:p-2 rounded-lg hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/30 flex-shrink-0"
               [attr.aria-label]="sidebarOpen() ? 'Fechar menu' : 'Abrir menu'"
             >

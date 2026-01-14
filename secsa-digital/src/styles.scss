@@ -2,3 +2,68 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Tooltip Styles */
+.app-tooltip {
+  position: absolute;
+  background-color: rgba(15, 23, 42, 0.95);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  pointer-events: none;
+  z-index: 9999;
+  white-space: nowrap;
+  opacity: 0;
+  transform: scale(0.9);
+  transition: opacity 150ms ease-in-out, transform 150ms ease-in-out;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(8px);
+}
+
+.app-tooltip.tooltip-visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.app-tooltip::before {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-style: solid;
+}
+
+/* Arrow positions */
+.app-tooltip.tooltip-top::before {
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 5px 5px 0 5px;
+  border-color: rgba(15, 23, 42, 0.95) transparent transparent transparent;
+}
+
+.app-tooltip.tooltip-bottom::before {
+  top: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 0 5px 5px 5px;
+  border-color: transparent transparent rgba(15, 23, 42, 0.95) transparent;
+}
+
+.app-tooltip.tooltip-left::before {
+  right: -5px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-width: 5px 0 5px 5px;
+  border-color: transparent transparent transparent rgba(15, 23, 42, 0.95);
+}
+
+.app-tooltip.tooltip-right::before {
+  left: -5px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-width: 5px 5px 5px 0;
+  border-color: transparent rgba(15, 23, 42, 0.95) transparent transparent;
+}
