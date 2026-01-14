@@ -66,6 +66,7 @@ export class PacienteRepository {
     const now = Timestamp.now();
     const data = {
       ...paciente,
+      status: paciente.status || 'ativo',
       criadoEm: now,
       atualizadoEm: now
     };
@@ -76,7 +77,10 @@ export class PacienteRepository {
     
     // Criar usuário automaticamente para o paciente
     try {
-      const pacienteCompleto = { ...data, id: pacienteId } as Paciente;
+      const pacienteCompleto = { 
+        ...paciente,
+        id: pacienteId 
+      } as Paciente;
       await this.pacienteUserService.criarUsuarioParaPaciente(pacienteCompleto, pacienteId);
       console.log('✅ Paciente e usuário criados com sucesso!');
     } catch (error) {
@@ -244,7 +248,6 @@ export class PacienteRepository {
    * Busca todos os pacientes (para dashboard/estatísticas)
    */
   async getAllPacientes(): Promise<Paciente[]> {
-    const snapshot = await this.firestoreService.getCollectionSnapshot<Paciente>(this.COLLECTION);
-    return snapshot;
+    return this.firestoreService.getCollectionSnapshot<Paciente>(this.COLLECTION);
   }
 }

@@ -8,9 +8,9 @@ import { TableSkeletonComponent } from '../../../shared/components/table-skeleto
 import { LucideAngularModule, Search, UserPlus, Edit, Trash2, Power } from 'lucide-angular';
 import { PacienteRepository } from '../../../data/repositories/paciente.repository';
 import { Paciente } from '../../../data/interfaces/paciente.interface';
-import { CpfPipe } from '../../../shared/pipes/cpf.pipe';
-import { CnsPipe } from '../../../shared/pipes/cns.pipe';
 import { TelefonePipe } from '../../../shared/pipes/telefone.pipe';
+import { MaskCpfPipe } from '../../../shared/pipes/mask-cpf.pipe';
+import { MaskCnsPipe } from '../../../shared/pipes/mask-cns.pipe';
 import { ToastService } from '../../../core/services/toast.service';
 import { PacienteFormModalComponent } from '../components/modals/paciente-form-modal.component';
 
@@ -25,9 +25,9 @@ import { PacienteFormModalComponent } from '../components/modals/paciente-form-m
     PaginationComponent,
     TableSkeletonComponent,
     LucideAngularModule,
-    CpfPipe,
-    CnsPipe,
     TelefonePipe,
+    MaskCpfPipe,
+    MaskCnsPipe,
     PacienteFormModalComponent
   ],
   template: `
@@ -93,10 +93,10 @@ import { PacienteFormModalComponent } from '../components/modals/paciente-form-m
                       {{ paciente.nomeCompleto }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
-                      {{ paciente.cpf | cpf }}
+                      {{ paciente.cpf | maskCpf }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
-                      {{ paciente.cns | cns }}
+                      {{ paciente.cns | maskCns }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
                       {{ paciente.telefone | telefone }}

@@ -176,46 +176,57 @@ import { TooltipDirective } from '../directives/tooltip.directive';
       >
         <!-- Header -->
         <header 
-          class="h-14 sm:h-16 bg-white border-b border-slate-200 flex items-center justify-between px-3 sm:px-4 lg:px-8 sticky top-0 z-20 shadow-sm"
+          class="h-16 sm:h-18 bg-white/80 backdrop-blur-md border-b border-slate-200/80 flex items-center justify-between px-4 sm:px-6 lg:px-8 sticky top-0 z-20 shadow-sm"
           role="banner"
         >
-          <div class="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
+          <div class="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
+            <!-- Hamburger Button -->
             <button
               type="button"
               (click)="toggleSidebar()"
               [appTooltip]="sidebarOpen() ? 'Fechar menu' : 'Abrir menu'"
               tooltipPosition="bottom"
-              class="text-slate-600 hover:text-primary transition-colors p-1.5 sm:p-2 rounded-lg hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/30 flex-shrink-0"
+              class="text-slate-600 hover:text-primary hover:bg-primary/5 transition-all duration-200 p-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30 flex-shrink-0"
               [attr.aria-label]="sidebarOpen() ? 'Fechar menu' : 'Abrir menu'"
             >
               <lucide-icon [img]="Menu" class="w-5 h-5 sm:w-6 sm:h-6" aria-hidden="true" />
             </button>
             
-            <h2 class="text-base sm:text-lg lg:text-xl font-semibold text-slate-800 truncate">
-              <ng-content select="[header]"></ng-content>
-            </h2>
+            <!-- Page Title -->
+            <div class="flex-1 min-w-0">
+              <h2 class="text-base sm:text-lg lg:text-xl font-bold text-slate-900 truncate flex items-center gap-2">
+                <ng-content select="[header]"></ng-content>
+              </h2>
+              <p class="hidden lg:block text-xs text-slate-500 mt-0.5">{{ getGreeting() }}</p>
+            </div>
           </div>
           
-          <div class="flex items-center gap-2 sm:gap-4 flex-shrink-0">
+          <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
             <!-- User Badge Mobile -->
-            <div class="sm:hidden">
-              <div class="w-8 h-8 bg-gradient-to-br from-primary to-blue-600 rounded-full flex items-center justify-center text-white text-xs font-semibold shadow-sm">
-                {{ getUserInitials() }}
-              </div>
-            </div>
+            <button
+              type="button"
+              class="sm:hidden w-9 h-9 bg-gradient-to-br from-primary to-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-md hover:shadow-lg transition-shadow focus:outline-none focus:ring-2 focus:ring-primary/30 focus:ring-offset-2"
+              [appTooltip]="currentUser()?.displayName || ''"
+              tooltipPosition="bottom"
+            >
+              {{ getUserInitials() }}
+            </button>
             
             <!-- User Badge Desktop -->
-            <div class="hidden sm:flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200">
-              <div class="w-8 h-8 bg-gradient-to-br from-primary to-blue-600 rounded-full flex items-center justify-center text-white text-xs font-semibold shadow-sm">
+            <div class="hidden sm:flex items-center gap-3 bg-gradient-to-r from-slate-50 to-slate-100/50 px-4 py-2 rounded-xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all duration-200 group">
+              <div class="w-9 h-9 bg-gradient-to-br from-primary to-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-md group-hover:shadow-lg transition-shadow">
                 {{ getUserInitials() }}
               </div>
               <div class="hidden md:block">
-                <p class="text-xs font-medium text-slate-900 truncate max-w-[150px] lg:max-w-[200px]">
+                <p class="text-sm font-semibold text-slate-900 truncate max-w-[140px] lg:max-w-[180px]">
                   {{ currentUser()?.displayName }}
                 </p>
-                <p class="text-xs text-slate-500 truncate max-w-[150px] lg:max-w-[200px]">
-                  {{ currentUser()?.email }}
-                </p>
+                <div class="flex items-center gap-1.5 mt-0.5">
+                  <span class="inline-block w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+                  <p class="text-xs text-slate-500 truncate max-w-[140px] lg:max-w-[180px]">
+                    {{ getRoleName() }}
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -287,6 +298,15 @@ export class LayoutComponent {
       'paciente': 'Paciente'
     };
     return roleNames[role || ''] || 'Usuário';
+  }
+
+  getGreeting(): string {
+    const hour = new Date().getHours();
+    const name = this.currentUser()?.displayName?.split(' ')[0] || 'Usuário';
+    
+    if (hour < 12) return `Bom dia, ${name}!`;
+    if (hour < 18) return `Boa tarde, ${name}!`;
+    return `Boa noite, ${name}!`;
   }
 
   toggleSidebar(): void {

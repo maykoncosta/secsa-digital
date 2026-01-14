@@ -97,7 +97,6 @@ export class PdfLaudoService {
     doc.setFont('helvetica', 'bold');
     doc.text('DADOS DO PACIENTE', margin, yPosition);
     yPosition += 6;
-
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
     

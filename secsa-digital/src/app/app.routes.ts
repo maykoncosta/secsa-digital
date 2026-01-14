@@ -18,6 +18,10 @@ export const routes: Routes = [
     loadComponent: () => import('./utils/create-admin.component').then(m => m.CreateAdminComponent)
   },
   {
+    path: 'migrar-criptografia',
+    loadComponent: () => import('./utils/migrar-criptografia.component').then(m => m.MigrarCriptografiaComponent)
+  },
+  {
     path: 'dashboard',
     loadChildren: () => import('./features/dashboard/dashboard.routes').then(m => m.DASHBOARD_ROUTES),
     canActivate: [authGuard, roleGuard],
